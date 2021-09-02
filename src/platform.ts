@@ -72,16 +72,20 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.debug('Finished initializing platform:', this.config.name);
       this.Controller.Connect();
 
+      this.DumpInfo();
+
       // Manage controller error
       this.Controller.on('ControllerError', (Error, ErrorString) => {
-        this.log.debug(Error + ': ' + ErrorString);
+
 
         if(Error === AnthemControllerError.COMMAND_NOT_SUPPORTED){
           this.log.error(Error + ': ' + ErrorString);
+          return;
         }
 
         if(Error === AnthemControllerError.INVALID_MODEL_STRING_RECEIVED){
           this.log.error(Error + ': ' + ErrorString + ',  Assuming model MRX 740 for debug purpose');
+          return;
         }
 
         // Try to reconnect if network error
@@ -92,6 +96,9 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
           }, 10000);
 
         }
+
+        this.log.debug(Error + ': ' + ErrorString);
+
       });
 
       // Start operation when controller is ready
