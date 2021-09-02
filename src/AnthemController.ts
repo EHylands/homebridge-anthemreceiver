@@ -52,7 +52,10 @@ export enum AnthemControllerError {
     ZONE_IS_NOT_POWERED = 'Zone is not powered',
     COMMAND_NOT_SUPPORTED = 'Command is not supported by receiver',
     RECEIVER_NOT_READY = 'Receiver not ready for operation',
-    INVALID_MODEL_STRING_RECEIVED = 'Received and invalid model string from receiver'
+    INVALID_MODEL_STRING_RECEIVED = 'Received and invalid model string from receiver',
+    CANNOT_EXECUTE_COMMAND = 'Received a valid command that cannot be executed',
+    OUT_OF_RANGE_PARAMETER = 'Controller received an out of range paramenter',
+    INVALID_COMMAND = 'Invalid command reveived'
   }
 
 export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
@@ -539,6 +542,30 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
                 this.emit('ZoneInputChange', this.ZoneArray[j], j, this.ZoneActiveInputArray[j]);
               }
             }
+          }
+
+          // Error management
+          if(Response.substring(0, 2) === '!E'){
+          // Valid command, but cannot be executed
+            this.emit('ControllerError', AnthemControllerError.CANNOT_EXECUTE_COMMAND, ': ' + Response.substring(2, Response.length));
+          }
+
+          // Error management
+          if(Response.substring(0, 2) === '!R'){
+            // Out of range parameter
+            this.emit('ControllerError', AnthemControllerError.OUT_OF_RANGE_PARAMETER, ': ' + Response.substring(2, Response.length));
+          }
+
+          // Error management
+          if(Response.substring(0, 2) === '!I'){
+            // Invalid command
+            this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND, ': ' + Response.substring(2, Response.length));
+          }
+
+          // Error management
+          if(Response.substring(0, 2) === '!Z'){
+            // Invalid command
+            this.emit('ControllerError', AnthemControllerError.ZONE_IS_NOT_POWERED, ': ' + Response.substring(2, Response.length));
           }
 
           // Checf if all information has been received to become ready for operatioin
