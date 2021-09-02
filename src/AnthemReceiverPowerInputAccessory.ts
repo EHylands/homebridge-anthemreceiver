@@ -77,10 +77,14 @@ export class AnthemReceiverPowerInputAccessory {
       }
     });
 
-    this.Controller.on('InputNameChange', (Input, Name) =>{
-      // Todo, manage how to chaange input name
-    });
+    //this.Controller.on('InputNameChange', (Input, Name) =>{
+    //  // Todo, manage how to chaange input name
+    //});
 
     this.platform.api.publishExternalAccessories(PLUGIN_NAME, [ReceiverAccessory]);
+  }
+
+  GetZoneIndex(){
+    return this.ZoneIndex;
   }
 }

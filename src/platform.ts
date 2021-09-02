@@ -122,18 +122,21 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   configureAccessory(accessory: PlatformAccessory) {
-  //this.log.info('Loading accessory from cache:', accessory.displayName);
-  //this.accessories.push(accessory);
+    this.log.info('Loading accessory from cache:', accessory.displayName);
+    this.accessories.push(accessory);
   }
 
   discoverDevices() {
 
     if(this.Zone1Active){
       const AnthemReceiver = new AnthemReceiverPowerInputAccessory(this, this.Controller, this.Controller.GetZoneIndex(1));
+      this.log.debug('Controlling zone: ' + this.Controller.GetZone(AnthemReceiver.GetZoneIndex()));
     }
 
     if(this.Zone2Active){
       const AnthemReceiver2 = new AnthemReceiverPowerInputAccessory(this, this.Controller, this.Controller.GetZoneIndex(2));
+      this.log.debug('Controlling zone: ' + this.Controller.GetZone(AnthemReceiver2.GetZoneIndex()));
+
     }
   }
 
