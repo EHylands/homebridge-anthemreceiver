@@ -72,11 +72,10 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.debug('Finished initializing platform:', this.config.name);
       this.Controller.Connect();
 
-      this.DumpInfo();
-
       // Manage controller error
       this.Controller.on('ControllerError', (Error, ErrorString) => {
 
+        this.DumpInfo();
 
         if(Error === AnthemControllerError.COMMAND_NOT_SUPPORTED){
           this.log.error(Error + ': ' + ErrorString);
