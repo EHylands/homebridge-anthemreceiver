@@ -95,9 +95,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
           }, 10000);
 
         }
-
         this.log.debug(Error + ': ' + ErrorString);
-
       });
 
       // Start operation when controller is ready
