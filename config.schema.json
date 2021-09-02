@@ -1,0 +1,57 @@
+{
+  "pluginAlias": "AnthemReceiver",
+  "pluginType": "platform",
+  "singular": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "Host":{
+        "title":"Host",
+        "type":"string",
+        "required": true
+      },
+      "Port":{
+        "title":"Port",
+        "type": "integer",
+        "required": true,
+        "default" : 14999
+      },
+      "Zone1":{
+        "title": "Zone 1",
+        "type": "object",
+        "properties":{
+          "Active":{
+            "title": "Show Zone Control in Home App",
+            "type": "boolean",
+          "default": true
+          },
+          "Name": {
+            "title": "Zone Name",
+            "type": "string",
+            "required": true,
+            "default": "Anthem Zone 1"
+          }
+        }
+      },
+      "Zone2":{
+        "title": "Zone 2",
+        "type": "object",
+        "properties":{
+          "Active":{
+            "title": "Show Zone Control in Home App",
+            "type": "boolean",
+          "default": true
+          },
+          "Name": {
+            "title": "Zone Name",
+            "type": "string",
+            "required": true,
+            "default": "Anthem Zone 2"
+          }
+        }
+      }
+
+      
+    }
+  }
+}
