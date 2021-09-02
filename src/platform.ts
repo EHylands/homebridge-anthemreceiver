@@ -147,7 +147,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     for(let i = 0 ; i < this.Controller.GetConfiguredZoneNumber() ; i++ ){
       this.log.error(' ' + (i+1) + ': ' + this.Controller.GetZoneName(i));
     }
-
     this.log.error('Number of inputs: ' + this.Controller.GetNumberOfInput());
 
     for(let i = 0 ; i < this.Controller.GetNumberOfInput() ; i++){
