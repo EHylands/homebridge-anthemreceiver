@@ -47,7 +47,7 @@ constructor(
   this.ZoneIndex = ZoneIndex;
   const Name = this.Controller.GetZoneName(this.ZoneIndex);
 
-  const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver12345' + this.Controller.ReceiverModel +
+  const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
     this.Controller.SerialNumber + this.Controller.GetZone(ZoneIndex));
   const ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
   ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
@@ -85,11 +85,15 @@ constructor(
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_LEFT: {
-            this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.LEFT);
+            if(this.Controller.GettIsMainZone(this.ZoneIndex)){
+              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.LEFT);
+            }
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_RIGHT: {
-            this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.RIGHT);
+            if(this.Controller.GettIsMainZone(this.ZoneIndex)){
+              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.RIGHT);
+            }
             break;
           }
           case this.platform.Characteristic.RemoteKey.SELECT: {

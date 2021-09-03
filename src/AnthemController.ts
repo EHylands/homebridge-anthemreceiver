@@ -609,29 +609,31 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           }
 
           // Get number of input
-          if(Response.substring(0, 3) === 'ICN'){
-            let NumberInput = Number(Response.substring(3, Response.length));
+          if(this.CurrentState === ControllerState.Configure){
+            if(Response.substring(0, 3) === 'ICN'){
+              let NumberInput = Number(Response.substring(3, Response.length));
 
-            const SupportedDevice = [
-              AnthemReceiverModel.MRX540,
-              AnthemReceiverModel.MRX740,
-              AnthemReceiverModel.MRX1140,
-              AnthemReceiverModel.AVM70,
-              AnthemReceiverModel.AVM90,
-            ];
+              const SupportedDevice = [
+                AnthemReceiverModel.MRX540,
+                AnthemReceiverModel.MRX740,
+                AnthemReceiverModel.MRX1140,
+                AnthemReceiverModel.AVM70,
+                AnthemReceiverModel.AVM90,
+              ];
 
-            if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
-              this.InputNameArray = new Array(NumberInput);
-              this.GetInputsNameFromReceiver();
-            } else{
+              if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+                this.InputNameArray = new Array(NumberInput);
+                this.GetInputsNameFromReceiver();
+              } else{
               // Know limitation for the moment
               // Older model only support max of 9 inputs
-              if(NumberInput > 9){
-                NumberInput = 9;
-              }
-              this.InputNameArray = new Array(NumberInput);
+                if(NumberInput > 9){
+                  NumberInput = 9;
+                }
+                this.InputNameArray = new Array(NumberInput);
 
-              this.GetInputsNameFromReceiver_OLD();
+                this.GetInputsNameFromReceiver_OLD();
+              }
             }
           }
 

@@ -2,8 +2,6 @@
 
 Homebridge Power and Input controller for Anthem AV Receiver. By default, the plugin will create one control for each zone on the receiver. 
 
-
-
 # Supported models
 
 - MRX 310, MRX 510, MRX 710
@@ -58,7 +56,7 @@ Zone1 and Zone2 options:
 - UP and DOWN to control volume
 - PLAY AND PAUSE to toggle mute
 - LEFT, RIGHT and CENTER to select input (Zone 1)
-- CENTER button so select (Zone 1)
+- CENTER button so select option (Zone 1)
 - BACK button to toggle audio listening mode (Zone 1)
 - INFO button to show and hide menu display (Zone 1)
 
@@ -69,6 +67,7 @@ Zone1 and Zone2 options:
 
 # Known issues
 
+- Homebridge needs to ne restarted if Inputs are added or removed on the Receiver 
 - Model series before X10 and X20 only support 9 inputs in this controller. 
 
 Last update: 2021-09-03 
