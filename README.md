@@ -2,6 +2,8 @@
 
 Homebridge Power and Input controller for Anthem AV Receiver. By default, the plugin will create one control for each zone on the receiver. 
 
+![Screenshot](ARR.png)
+
 # Supported models
 
 - MRX 310, MRX 510, MRX 710
