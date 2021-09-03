@@ -55,7 +55,16 @@ export enum AnthemControllerError {
     INVALID_MODEL_STRING_RECEIVED = 'Received and invalid model string from receiver',
     CANNOT_EXECUTE_COMMAND = 'Received a valid command that cannot be executed',
     OUT_OF_RANGE_PARAMETER = 'Controller received an out of range paramenter',
-    INVALID_COMMAND = 'Invalid command reveived'
+    INVALID_COMMAND = 'Invalid command reveived',
+    COMMAND_ONLY_AVAILABLE_ON_MAIN_ZONE = 'Command only available on main zone'
+  }
+
+export enum AnthemKeyCode {
+    UP = '0018',
+    DOWN = '0019',
+    LEFT = '0020',
+    RIGHT = '0021',
+    SELECT = '0022'
   }
 
 export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
@@ -74,6 +83,9 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     SerialNumber = '';
     SoftwareVersion = '';
     ReceiverModel = AnthemReceiverModel.Undefined;
+
+    private MainZone = 1;
+    private ConfigMenuDisplayVisible = false;
 
     constructor(Host: string, Port:number) {
       super();
@@ -120,6 +132,18 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
     GetZone(ZoneIndex: number){
       return this.ZoneArray[ZoneIndex];7274;
+    }
+
+    GettIsMainZone(ZoneIndex: number){
+      if(this.ZoneArray[ZoneIndex] === this.MainZone){
+        return true;
+      } else{
+        return false;
+      }
+    }
+
+    GetIsMenuDisplayVisible(){
+      return this.ConfigMenuDisplayVisible;
     }
 
     GetZoneIndex(Zone: number){
@@ -337,6 +361,59 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       this.SendCommand();
     }
 
+    //
+    // Function SelectNextInput()
+    // Iterate throught inputs
+    //
+    // Availability: All model
+    SelectNextInput(ZoneIndex: number){
+      let Input = this.ZoneActiveInputArray[ZoneIndex];
+      Input = Input + 1;
+      if(Input > this.GetNumberOfInput()){
+        Input = 1;
+      }
+
+      this.SetZoneInput(ZoneIndex, Input);
+    }
+
+    //
+    // Function ToggleAudioListeningMode()
+    // Iterate throught inputs
+    //
+    // Availability: All model
+    ToggleAudioListeningMode(ZoneIndex:number, UP: boolean){
+      if(!this.GettIsMainZone(ZoneIndex)){
+        this.emit('ControllerError', AnthemControllerError.COMMAND_ONLY_AVAILABLE_ON_MAIN_ZONE, '');
+        return;
+      }
+
+      const SupportedDevice = [
+        AnthemReceiverModel.MRX540,
+        AnthemReceiverModel.MRX740,
+        AnthemReceiverModel.MRX1140,
+        AnthemReceiverModel.AVM70,
+        AnthemReceiverModel.AVM90,
+      ];
+
+      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+        if(UP){
+          this.QueueCommand('Z1AUP');
+        } else{
+          this.QueueCommand('Z1ADN');
+        }
+      } else{
+        if(UP){
+          this.QueueCommand('Z1ALMna');
+
+        } else{
+          this.QueueCommand('Z1ALMpa');
+        }
+
+      }
+      this.SendCommand();
+    }
+
+
     IsAllZonePowerConfigured(){
       for(let i = 0 ; i < this.ZoneArray.length ; i++){
         if(this.ZoneIsPoweredArray[i] === undefined){
@@ -373,6 +450,57 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       } else{
         this.QueueCommand('Z' + this.ZoneArray[ZoneIndex] + 'POW0');
       }
+      this.SendCommand();
+    }
+
+    //
+    // Function ToggleMute()
+    //
+    ToggleMute(ZoneIndex: number){
+      this.QueueCommand('Z' + this.ZoneArray[ZoneIndex] + 'MUTt');
+      this.SendCommand();
+    }
+
+    //
+    // Function VolumeUp()
+    //
+    VolumeUp(ZoneIndex: number){
+      this.QueueCommand('Z'+ this.ZoneArray[ZoneIndex] + 'VUP');
+      this.SendCommand();
+    }
+
+    //
+    // Function Volume Down()
+    //
+    VolumeDown(ZoneIndex: number){
+      this.QueueCommand('Z'+ this.ZoneArray[ZoneIndex] + 'VDN');
+      this.SendCommand();
+    }
+
+    //
+    // Function ToggleConfigMenu()
+    // Show on screen configuration menu
+    //
+    // Availability: All model
+    ToggleConfigMenu(){
+      this.QueueCommand('Z1SMDt');
+      this.SendCommand();
+    }
+
+    //
+    // Function ToggleConfigMenu()
+    // Show on screen configuration menu
+    //
+    GetConfigMenuState(){
+      this.QueueCommand('Z1SMD?');
+      this.SendCommand();
+    }
+
+    //
+    // Function SendKey()
+    //
+    SendKey(ZoneIndex: number, Code: AnthemKeyCode){
+      this.QueueCommand('Z'+ this.ZoneArray[ZoneIndex] + 'SIM'+ Code);
       this.SendCommand();
     }
 
@@ -444,6 +572,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       }
 
       this.GetNumberOfInputFromReceiver();
+      this.GetConfigMenuState();
       this.SendCommand();
     }
 
@@ -481,7 +610,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
           // Get number of input
           if(Response.substring(0, 3) === 'ICN'){
-            this.InputNameArray = new Array(Number(Response[3]));
+            let NumberInput = Number(Response.substring(3, Response.length));
 
             const SupportedDevice = [
               AnthemReceiverModel.MRX540,
@@ -492,15 +621,22 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             ];
 
             if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+              this.InputNameArray = new Array(NumberInput);
               this.GetInputsNameFromReceiver();
             } else{
+              // Know limitation for the moment
+              // Older model only support max of 9 inputs
+              if(NumberInput > 9){
+                NumberInput = 9;
+              }
+              this.InputNameArray = new Array(NumberInput);
+
               this.GetInputsNameFromReceiver_OLD();
             }
           }
 
           // Get Zone power status
           for(let j = 0 ; j < this.ZoneArray.length ; j++){
-
             if(Response.substring(0, 5) === ('Z' + this.ZoneArray[j] + 'POW')){
               this.ZoneIsPoweredArray[j] = (Response[5] === '1');
             }
@@ -511,15 +647,21 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           }
 
           // Get Input Name
-          if(Response.substring(0, 2) === 'IS' && Response.substring(3, 5) === 'IN'){
-            const input = Response[2];
-            // test to make sure input is valid
+          if(Response.substring(0, 2) === 'IS'){
+            const TempString = Response.substring(2, Response.length);
+            // Find position of firs 'IN' in string
+            for(let i = 0 ; i < Response.length-2; i++){
+              if(TempString.substring(i, i+2) === 'IN'){
+                const InputNumber = Number(TempString.substring(0, i));
+                const Name = TempString.substring(i+2, TempString.length);
 
-            const name = Response.substring(5, Response.length);
-            this.InputNameArray[Number(input) - 1] = name;
+                this.InputNameArray[InputNumber-1] = Name;
 
-            if(this.CurrentState === ControllerState.Operation){
-              this.emit('InputNameChange', Number(input), name);
+                if(this.CurrentState === ControllerState.Operation){
+                  this.emit('InputNameChange', InputNumber, Name);
+                }
+                break;
+              }
             }
           }
 
@@ -537,11 +679,16 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           // Get new actives inputs
           for(let j = 0 ; j < this.ZoneArray.length ; j++){
             if(Response.substring(0, 5) === ('Z' + this.ZoneArray[j] + 'INP')){
-              this.ZoneActiveInputArray[j] = Number(Response[5]);
+              this.ZoneActiveInputArray[j] = Number(Response.substring(5, Response.length));
               if(this.CurrentState === ControllerState.Operation){
                 this.emit('ZoneInputChange', this.ZoneArray[j], j, this.ZoneActiveInputArray[j]);
               }
             }
+          }
+
+          // Get Config Menu Sate
+          if(Response.substring(0, 5) === 'Z1SMD'){
+            this.ConfigMenuDisplayVisible = Response[5] === '1';
           }
 
           // Error management
