@@ -1,71 +1,106 @@
-import { Service } from 'homebridge';
-import { isRegExp } from 'util';
+import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController, AnthemKeyCode } from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 import { PLUGIN_NAME } from './settings';
 
-
-enum MenuItem {
-  VOLUME ='Volume',
-  ARC = 'ARC',
-  MUTE = 'Mute',
-  PROFILE = 'Profile',
-  CURRENT_AUDIO_MODE = 'Current Audio Mode',
-  FRONT = 'Front',
-  CENTTER = 'Center',
-  SUBWOOFERS = 'Subwoofers',
-  SUROUND = 'Suround',
-  BACK = 'Back',
-  FRONT_IN_CEILING = 'Front In-Ceiling',
-  BACK_IN_CEILING = 'Baack In-Ceiling',
-  BALANCE = 'Balance',
-  TREBBLE = 'Trebble',
-  BASS = 'Bass',
-}
-
-
 export class AnthemReceiverPowerInputAccessory {
-  private service: Service;
+  private ReceiverAccessory: PlatformAccessory;
+  private TVService: Service;
+  private SpeakerService: Service;
 
-private Menu = [
-  [MenuItem.VOLUME, MenuItem.MUTE, MenuItem.CURRENT_AUDIO_MODE, MenuItem.ARC, MenuItem.PROFILE],
-  [MenuItem.FRONT, MenuItem.CENTTER, MenuItem.SUBWOOFERS, MenuItem.SUROUND,
-    MenuItem.BACK, MenuItem.FRONT_IN_CEILING, MenuItem.BACK_IN_CEILING],
-  [MenuItem.BALANCE, MenuItem.CENTTER, MenuItem.BASS]];
-
-private MainMenuIndex = 0;
-private SubMenuIndex = [0, 0, 0];
-
-
-constructor(
+  constructor(
     private readonly platform: AnthemReceiverHomebridgePlatform,
     //  private readonly accessory: PlatformAccessory,
     private readonly Controller: AnthemController,
     private readonly ZoneIndex: number,
-) {
+  ) {
 
-  this.ZoneIndex = ZoneIndex;
-  const Name = this.Controller.GetZoneName(this.ZoneIndex);
+    this.ZoneIndex = ZoneIndex;
+    const Name = this.Controller.GetZoneName(this.ZoneIndex);
 
-  const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
-    this.Controller.SerialNumber + this.Controller.GetZone(ZoneIndex));
-  const ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
-  ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
-  this.service = ReceiverAccessory.addService(this.platform.Service.Television);
-  this.service.setCharacteristic(this.platform.Characteristic.ConfiguredName, Name);
-  this.service.setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode,
-    this.platform.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE);
+    const uuid = this.platform.api.hap.uuid.generate('345Anthem_Receiver' + this.Controller.ReceiverModel +
+    this.Controller.SerialNumber + this.Controller.GetZoneNumber(ZoneIndex));
+    this.ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
+    this.ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
 
-    // set accessory information
-    ReceiverAccessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
-      .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel)
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber)
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
+  // set accessory information
+  this.ReceiverAccessory.getService(this.platform.Service.AccessoryInformation)!
+    .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
+    .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel)
+    .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber)
+    .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
 
-    this.service
+  this.TVService = this.ConfigureTelevisionservice();
+  this.SpeakerService = this.ConfigureTelevisionSpeakerService();
+
+  // Initialise plugin
+  this.TVService.setCharacteristic(this.platform.Characteristic.ActiveIdentifier,
+    this.Controller.GetZone(this.ZoneIndex).GetActiveInput());
+  this.TVService.setCharacteristic(this.platform.Characteristic.Active, this.Controller.GetZone(this.ZoneIndex).GetIsPowered());
+
+  this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power: boolean) => {
+    if(this.ZoneIndex === ZoneIndex){
+      this.TVService.updateCharacteristic(this.platform.Characteristic.Active, Power);
+    }
+  });
+
+  this.Controller.on('ZoneInputChange', (Zone: number, ZoneIndex: number, Input: number) => {
+    if(this.ZoneIndex === ZoneIndex){
+      this.TVService.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, Input);
+    }
+  });
+
+  this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
+    if(this.ZoneIndex === ZoneIndex){
+      this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
+    }
+  });
+
+  this.Controller.on('ZoneVolumePercentageChange', (Zone: number, ZoneIndex: number, VolumePercentage:number)=>{
+    this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
+  });
+
+  this.platform.api.publishExternalAccessories(PLUGIN_NAME, [this.ReceiverAccessory]);
+  }
+
+  ConfigureTelevisionservice():Service{
+    const Name = this.Controller.GetZoneName(this.ZoneIndex);
+    const TVService = this.ReceiverAccessory.addService(this.platform.Service.Television);
+    TVService.setCharacteristic(this.platform.Characteristic.ConfiguredName, Name);
+    TVService.setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode,
+      this.platform.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE);
+
+    // Configure inputs names
+    for (let i = 0; i < this.Controller.GetNumberOfInput() ; i++){
+      const hdmiInputService = this.ReceiverAccessory.addService(this.platform.Service.InputSource, 'hdmi'+(i+1), 'HDMI '+ (i+1));
+      hdmiInputService
+        .setCharacteristic(this.platform.Characteristic.Identifier, (i+1))
+        .setCharacteristic(this.platform.Characteristic.ConfiguredName, this.Controller.GetInputName(i))
+        .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
+        .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.HDMI);
+      TVService.addLinkedService(hdmiInputService);
+    }
+
+    // Send change from homekit to Anthem Receiver - Power
+    TVService.getCharacteristic(this.platform.Characteristic.Active)
+      .onSet((newValue) => {
+        this.Controller.PowerZone(this.ZoneIndex, newValue === 1);
+      });
+
+    // Send change from homekit to Anthem Receiver - Active input
+    TVService.getCharacteristic(this.platform.Characteristic.ActiveIdentifier)
+      .onSet((newValue) => {
+        this.Controller.SetZoneInput(this.ZoneIndex, Number(newValue));
+      });
+
+    TVService
       .getCharacteristic(this.platform.Characteristic.RemoteKey)
       .on('set', async (newValue, callback) => {
+        if(!this.Controller.GetZone(this.ZoneIndex).GetIsPowered()){
+          this.Controller.PowerZone(this.ZoneIndex, true);
+          callback();
+          return;
+        }
 
         switch (newValue) {
           case this.platform.Characteristic.RemoteKey.ARROW_UP: {
@@ -74,35 +109,38 @@ constructor(
             } else{
               this.Controller.VolumeUp(this.ZoneIndex);
             }
+
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_DOWN: {
             if(this.Controller.GetIsMenuDisplayVisible()){
               this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.DOWN);
-            } else{
+            } else {
               this.Controller.VolumeDown(this.ZoneIndex);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_LEFT: {
-            if(this.Controller.GettIsMainZone(this.ZoneIndex)){
+            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
               this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.LEFT);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_RIGHT: {
-            if(this.Controller.GettIsMainZone(this.ZoneIndex)){
+            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
               this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.RIGHT);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.SELECT: {
-            this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.SELECT);
+            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
+              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.SELECT);
+            }
             break;
           }
 
           case this.platform.Characteristic.RemoteKey.BACK: {
-            if(this.Controller.GettIsMainZone(this.ZoneIndex)){
+            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
               this.Controller.ToggleAudioListeningMode(this.ZoneIndex, true);
             }
             break;
@@ -113,64 +151,79 @@ constructor(
             break;
           }
           case this.platform.Characteristic.RemoteKey.INFORMATION: {
-            if(this.Controller.GettIsMainZone(this.ZoneIndex)){
+            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
               this.Controller.ToggleConfigMenu();
             }
             break;
           }
         }
-
         callback();
       });
+    return TVService;
+  }
 
-    // Initialise plugin
-    this.service.setCharacteristic(this.platform.Characteristic.ActiveIdentifier,
-      this.Controller.GetActiveInputForZoneIndex(this.ZoneIndex));
-    this.service.setCharacteristic(this.platform.Characteristic.Active, this.Controller.GetZonePower(this.ZoneIndex));
+  ConfigureTelevisionSpeakerService():Service{
+    const Name = this.Controller.GetZoneName(this.ZoneIndex);
+    const SpeakerService = this.ReceiverAccessory.addService(this.platform.Service.TelevisionSpeaker);
+    SpeakerService.setCharacteristic(this.platform.Characteristic.Active, this.platform.Characteristic.Active.ACTIVE);
+    SpeakerService.setCharacteristic(this.platform.Characteristic.Name, Name);
+    SpeakerService.setCharacteristic(this.platform.Characteristic.VolumeControlType,
+      this.platform.Characteristic.VolumeControlType.ABSOLUTE);
 
-    // Send change from homekit to Anthem Receiver - Power
-    this.service.getCharacteristic(this.platform.Characteristic.Active)
-      .onSet((newValue) => {
-        this.Controller.PowerZone(this.ZoneIndex, newValue === 1);
-      });
+    SpeakerService.getCharacteristic(this.platform.Characteristic.Mute)
+      .onGet(this.HandleMuteGet.bind(this))
+      .onSet(this.HandleMuteSet.bind(this));
 
-    // Send change from homekit to Anthem Receiver - Active input
-    this.service.getCharacteristic(this.platform.Characteristic.ActiveIdentifier)
-      .onSet((newValue) => {
-        this.Controller.SetZoneInput(this.ZoneIndex, Number(newValue));
-      });
+    SpeakerService.getCharacteristic(this.platform.Characteristic.Volume)
+      .on('get', this.HandleVolumeGet.bind(this)) // Not working
+      .on('set', this.HandleVolumeSet.bind(this));
 
-    // Configure inputs names
-    for (let i = 0; i < this.Controller.GetNumberOfInput() ; i++){
-      const hdmiInputService = ReceiverAccessory.addService(this.platform.Service.InputSource, 'hdmi'+(i+1), 'HDMI '+ (i+1));
-      hdmiInputService
-        .setCharacteristic(this.platform.Characteristic.Identifier, (i+1))
-        .setCharacteristic(this.platform.Characteristic.ConfiguredName, this.Controller.GetInputName(i))
-        .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
-        .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.HDMI);
-      this.service.addLinkedService(hdmiInputService);
+    SpeakerService.getCharacteristic(this.platform.Characteristic.VolumeSelector)
+      .onSet(this.HandleVolumeSelector.bind(this));
+
+    return SpeakerService;
+  }
+
+  GetZoneIndex(){
+    return this.ZoneIndex;
+  }
+
+  HandleMuteGet() {
+    return this.Controller.GetMute(this.ZoneIndex);
+  }
+
+  HandleMuteSet(newValue) {
+    if(this.Controller.GetZone(this.ZoneIndex).GetIsPowered()){
+      this.Controller.SetMute(this.ZoneIndex, Boolean(newValue));
+    }
+  }
+
+  // Not working for the moment.
+  HandleVolumeGet(callback){
+    const VP = this.Controller.GetZone(this.ZoneIndex).GetVolumePercentage();
+    this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VP);
+    callback(VP);
+  }
+
+  HandleVolumeSelector(Value){
+    if(!this.Controller.GetZone(this.ZoneIndex).GetIsPowered()){
+      this.Controller.PowerZone(this.ZoneIndex, true);
+      return;
     }
 
-    this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power: boolean) => {
-      if(this.ZoneIndex === ZoneIndex){
-        this.service.updateCharacteristic(this.platform.Characteristic.Active, Power);
-      }
-    });
+    switch (Value) {
+      case this.platform.Characteristic.VolumeSelector.INCREMENT: // Volume up
+        this.Controller.VolumeUp(this.ZoneIndex);
+        break;
+      case this.platform.Characteristic.VolumeSelector.DECREMENT: // Volume down
+        this.Controller.VolumeDown(this.ZoneIndex);
+        break;
+    }
+  }
 
-    this.Controller.on('ZoneInputChange', (Zone: number, ZoneIndex: number, Input: number) => {
-      if(this.ZoneIndex === ZoneIndex){
-        this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, Input);
-      }
-    });
+  HandleVolumeSet(newValue, callback){
+    this.Controller.SetZoneVolumePercentage(this.ZoneIndex, newValue);
+    callback();
+  }
 
-    //this.Controller.on('InputNameChange', (Input, Name) =>{
-    //  // Todo, manage how to chaange input name
-    //});
-
-    this.platform.api.publishExternalAccessories(PLUGIN_NAME, [ReceiverAccessory]);
-}
-
-GetZoneIndex(){
-  return this.ZoneIndex;
-}
 }
