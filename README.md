@@ -9,10 +9,11 @@ Homebridge Power and Input controller for Anthem AV Receiver. By default, the pl
 - MRX 310, MRX 510, MRX 710
 - MRX 520, MRX 720, MRX 1120
 - MRX 540, MRX 740, MRX 1140 (tested)
+- AVM 60,  AVM 70,  AVM 90
 
 # Getting started
 
-- Install Hombebridge
+- Install Homebridge
 - Enable Connected Standby option on receiver (System setup -> General - General Setting)
 - Installl homebridge-anthemreceiver plugin
 - Configure by filling config.json or using Homebridge UI
@@ -29,6 +30,7 @@ Zone1 and Zone2 options:
 - Active: Show or hide accessory in Home app.
 - Name: Accessory name in Home app. 
 
+```
     {
     "platform": "AnthemReceiver",
         "Host": "192.168.1.*",
@@ -42,6 +44,7 @@ Zone1 and Zone2 options:
              "Name": "Zone2"
          }   
     }
+```
 
 # Adding accessory to Home App
 
@@ -51,26 +54,22 @@ Zone1 and Zone2 options:
 - Select unconfigured accessory to be added.
 - Follow further on screen instructions to complete configuration
 
-# 0.1.2
+# 0.1.5
 
-- Added support for Apple Remote in control center
+- Adding support for Apple Remote in Control Center
 
-- UP and DOWN to control volume
+- UP:
+- DOWN: 
+- UP and DOWN physical volume buttons to change volume
 - PLAY AND PAUSE to toggle mute
-- LEFT, RIGHT and CENTER to select input (Zone 1)
-- CENTER button so select option (Zone 1)
-- BACK button to toggle audio listening mode (Zone 1)
-- INFO button to show and hide menu display (Zone 1)
-
-# To do list
-
-- Test on other models (only tested on MRX 740) 
-- Add other accessory to control orther receiver functions (Mute, Volume, etc.)
+- LEFT, RIGHT to select input (Main Zone)
+- CENTER button so select option (Main Zone)
+- BACK button to toggle audio listening mode (Main Zone)
+- INFO button to show and hide menu display (Main Zone)
 
 # Known issues
 
-- Homebridge needs to ne restarted if Inputs are added or removed on the Receiver 
-- Model series before X10 and X20 only support 9 inputs in this controller. 
+- Homebridge needs to be restarted if inputs are added or removed on the Receiver 
+- Model series X10 and X20 only support 9 inputs on this controller. 
 
-Last update: 2021-09-03 
 
