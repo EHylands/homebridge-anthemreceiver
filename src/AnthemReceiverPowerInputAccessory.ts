@@ -18,7 +18,7 @@ export class AnthemReceiverPowerInputAccessory {
     this.ZoneIndex = ZoneIndex;
     const Name = this.Controller.GetZoneName(this.ZoneIndex);
 
-    const uuid = this.platform.api.hap.uuid.generate('345Anthem_Receiver' + this.Controller.ReceiverModel +
+    const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
     this.Controller.SerialNumber + this.Controller.GetZoneNumber(ZoneIndex));
     this.ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
     this.ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
