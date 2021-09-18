@@ -32,7 +32,7 @@ Zone1 and Zone2 options:
 ```
 {
     "platform": "AnthemReceiver",
-    "Host": "192.168.1.*",
+    "Host": "192.168.1.1",
     "Port": 14999,
     "Zone1": {
         "Active": true,
@@ -53,18 +53,15 @@ Zone1 and Zone2 options:
 - Select unconfigured accessory to be added.
 - Follow further on screen instructions to complete configuration
 
-# 0.1.5
 
-- Adding support for Apple Remote in Control Center
-
-- UP:
-- DOWN: 
-- UP and DOWN physical volume buttons to change volume
-- PLAY AND PAUSE to toggle mute
-- LEFT, RIGHT to select input (Main Zone)
-- CENTER button so select option (Main Zone)
-- BACK button to toggle audio listening mode (Main Zone)
-- INFO button to show and hide menu display (Main Zone)
+# Apple Remote in Control Center
+* UP and DOWN physical volume buttons to change volume
+* UP and DOWN to change volume
+* PLAY AND PAUSE to toggle mute
+* LEFT, RIGHT to select input (Main Zone)
+* BACK button to toggle audio listening mode (Main Zone)
+* INFO button to show and hide menu display (Main Zone)
+* CENTER button so select option (Main Zone)
 
 # Known issues
 
