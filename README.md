@@ -1,6 +1,6 @@
 # homebridge-anthemreceiver
 
-Homebridge Power and Input controller for Anthem AV Receiver. By default, the plugin will create one control for each zone on the receiver. 
+Homebridge Power and Input controller for Anthem AV Receiver. By default, the plugin will create one aaccessory for each zone on the receiver. 
 
 ![Screenshot](AR.png)
 
@@ -14,7 +14,7 @@ Homebridge Power and Input controller for Anthem AV Receiver. By default, the pl
 # Getting started
 
 - Install Homebridge
-- Enable Connected Standby option on receiver (System setup -> General - General Setting)
+- Enable Connected Standby option on receiver (System setup -> General -> General Setting)
 - Installl homebridge-anthemreceiver plugin
 - Configure by filling config.json or using Homebridge UI
 - Restart Homebridge server
