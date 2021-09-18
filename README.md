@@ -22,28 +22,27 @@ Homebridge Power and Input controller for Anthem AV Receiver. By default, the pl
 
 # Configuration options
 
-Please see config.json.sample
-- Host: IP address or hostname of Anthem receiver
-- Port: Default to 14999, use value set up in receiver
+* `Host`: IP address or hostname of Anthem receiver
+* `Port`: Default to 14999, use value set up in receiver
 
 Zone1 and Zone2 options:
-- Active: Show or hide accessory in Home app.
-- Name: Accessory name in Home app. 
+- Active: Show or hide accessory in Home App.
+- Name: Accessory name in Home App. 
 
 ```
-    {
+{
     "platform": "AnthemReceiver",
-        "Host": "192.168.1.*",
-        "Port": 14999,
-        "Zone1": {
-            "Active": true,
-            "Name": "Zone1"
-        },
-        "Zone2": {
-            "Active": true,
-             "Name": "Zone2"
-         }   
-    }
+    "Host": "192.168.1.*",
+    "Port": 14999,
+    "Zone1": {
+        "Active": true,
+        "Name": "Zone1"
+    },
+    "Zone2": {
+        "Active": true,
+        "Name": "Zone2"
+    }   
+}
 ```
 
 # Adding accessory to Home App
