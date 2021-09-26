@@ -1,6 +1,6 @@
 # homebridge-anthemreceiver
 
-Homebridge Power and Input controller for Anthem AV Receiver. By default, the plugin will create one aaccessory for each zone on the receiver. 
+Homebridge Power and Input controller for Anthem AV Receiver. By default, the plugin will create one accessory for each zone on the receiver. 
 
 ![Screenshot](AR.png)
 
@@ -46,13 +46,18 @@ Zone1 and Zone2 options:
 ```
 
 # Adding accessory to Home App
-
+## iOS 14
 - Open Home App
-- Select "+" on the right upper corner of the screen
+- Select "+" on the right upper corner of the screen and select "Add Accessory"
 - Select "I don't have a Code or Cannot Scan"
 - Select unconfigured accessory to be added.
 - Follow further on screen instructions to complete configuration
-
+## iOS 15
+- Open Home App
+- Select "+" on the right upper corner of the screen and select "Add Accessory"
+- Select "More options"
+- Select unconfigured accessory to be added.
+- Follow further on screen instructions to complete configuration
 
 # Apple Remote in Control Center
 * UP and DOWN physical volume buttons to change volume
