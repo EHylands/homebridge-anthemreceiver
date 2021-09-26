@@ -418,7 +418,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       }
 
       for(let i = 1 ; i <= this.InputNameArray.length ; i++){
-        this.QueueCommand('ISN' + this.InputNameArray[i] + '?');
+        this.QueueCommand('ISN' + i + '?');
       }
       this.SendCommand();
     }
