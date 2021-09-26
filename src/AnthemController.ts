@@ -689,9 +689,16 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Set receiver model from string received from receiver
     //
     private SetModel(ModelString: string){
+
+      // Check for extra white space at the end of ModelString
+      let ModifiedModelString = ModelString;
+      if(ModifiedModelString.slice(ModifiedModelString.length-1) === ' '){
+        ModifiedModelString = ModifiedModelString.slice(0, ModifiedModelString.length-1);
+      }
+
       for(let i = 0 ; i < AllAnthemReceiverModel.length ; i++){
-        if(ModelString === AllAnthemReceiverModel[i]){
-          // Found a maatch
+        if(ModifiedModelString === AllAnthemReceiverModel[i]){
+          // Found a match
           this.ReceiverModel = AllAnthemReceiverModel[i];
           return;
         }
@@ -699,7 +706,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
       // No match.
       // For debug purpose, asssume model MRX 740
-      this.emit('ControllerError', AnthemControllerError.INVALID_MODEL_STRING_RECEIVED, ModelString);
+      this.emit('ControllerError', AnthemControllerError.INVALID_MODEL_STRING_RECEIVED, ModifiedModelString);
       this.ReceiverModel = AnthemReceiverModel.MRX740;
     }
 

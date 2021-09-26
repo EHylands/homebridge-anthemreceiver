@@ -63,6 +63,11 @@ Zone1 and Zone2 options:
 * INFO button to show and hide menu display (Main Zone)
 * CENTER button so select option (Main Zone)
 
+
+# Releases
+## 0.3.1
+* Fixing proper model identification for X10 and X20 series. 
+
 # Known issues
 
 - Homebridge needs to be restarted if inputs are added or removed on the Receiver 
