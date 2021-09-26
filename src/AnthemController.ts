@@ -9,6 +9,7 @@ export interface AnthemControllerEvent {
     'ZoneInputChange': (Zone: number, ZoneIndex: number, Input: number) => void;
     'InputNameChange':(Input: number, Name: string) => void;
     'ControllerError': (Error: AnthemControllerError, ErrorString: string) => void;
+    'ShowDebugInfo':(DebugString: string)=> void;
   }
 
 export enum AnthemReceiverModel {
@@ -254,6 +255,9 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       for(let i = 0 ; i < this.CommandArray.length ; i ++){
         CommandString = CommandString + this.CommandArray[i] + ';';
       }
+
+      this.emit('ShowDebugInfo', 'Sending command: ' + CommandString);
+
       this.Client.write(CommandString);
       this.CommandArray = [];
     }
@@ -341,12 +345,12 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Availability: All models supported by controller
     private GetIsZoneMutedFromReceiver(ZoneIndex: number){
       this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'MUT?');
-      this.SendCommand();
+      //this.SendCommand();
     }
 
     private GetZoneVolumePercentageFromReceiver(ZoneIndex:number){
       this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'PVOL?');
-      this.SendCommand();
+      //this.SendCommand();
     }
 
     SetZoneVolumePercentage(ZoneIndex:number, VolumePercentage: number){
@@ -664,7 +668,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Availability: All model
     GetConfigMenuState(){
       this.QueueCommand('Z1SMD?');
-      this.SendCommand();
+      //this.SendCommand();
     }
 
     //
@@ -750,12 +754,10 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         this.GetZoneActiveInputFromReceiver(i);
         this.GetIsZoneMutedFromReceiver(i);
         this.GetZoneVolumePercentageFromReceiver(i);
-        this.GetZoneActiveInputARCEnabled(i);
+        //this.GetZoneActiveInputARCEnabled(i);
       }
-
-      this.GetNumberOfInputFromReceiver();
       this.GetConfigMenuState();
-
+      this.GetNumberOfInputFromReceiver();
       this.SendCommand();
     }
 
@@ -763,7 +765,15 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       const SplitString = Data.toString().split(';');
 
       for(let i = 0 ; i < SplitString.length - 1 ; i ++){
-        const Response = SplitString[i];
+        let Response = SplitString[i];
+
+        this.emit('ShowDebugInfo', 'Reading response: ' + Response + '-');
+
+        // Remove white space if present
+        if(Response.slice(Response.length-1) === ' '){
+          Response = Response.slice(0, Response.length-1);
+        }
+
         if(Response.length !== 0){
 
           // Get Device Model

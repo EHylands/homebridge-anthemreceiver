@@ -50,6 +50,10 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
           this.discoverDevices();
         });
 
+        this.Controller.on('ShowDebugInfo', (DebugString) => {
+          this.log.debug(DebugString);
+        });
+
         // Configure Controller Error Event
         this.ConfigureControllerError();
 
@@ -88,7 +92,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     // Warn if no port has been defined in config file, use default value
     if(this.config.Port === undefined){
       this.Port = this.config.Port;
-    } else{
       this.log.info('Error reading Port from config file, using default value: ' + this.Port);
     }
 
