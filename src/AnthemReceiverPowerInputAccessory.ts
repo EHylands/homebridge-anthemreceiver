@@ -6,7 +6,7 @@ import { PLUGIN_NAME } from './settings';
 export class AnthemReceiverPowerInputAccessory {
   private ReceiverAccessory: PlatformAccessory;
   private TVService: Service;
-  //private SpeakerService: Service;
+  private SpeakerService: Service;
 
   private HdmiInputService: Service[];
 
@@ -21,7 +21,7 @@ export class AnthemReceiverPowerInputAccessory {
     const Name = this.Controller.GetZoneName(this.ZoneIndex);
     this.HdmiInputService = [];
 
-    const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
+    const uuid = this.platform.api.hap.uuid.generate('test_Anthem_Receiver' + this.Controller.ReceiverModel +
     this.Controller.SerialNumber + this.Controller.GetZoneNumber(ZoneIndex));
     this.ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
     this.ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
@@ -35,7 +35,7 @@ export class AnthemReceiverPowerInputAccessory {
 
   this.TVService = this.ConfigureTelevisionservice();
 
-  // this.SpeakerService = this.ConfigureTelevisionSpeakerService();
+  this.SpeakerService = this.ConfigureTelevisionSpeakerService();
 
   // Initialise plugin
   //this.TVService.setCharacteristic(this.platform.Characteristic.ActiveIdentifier,
@@ -55,15 +55,15 @@ export class AnthemReceiverPowerInputAccessory {
     }
   });
 
-  this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
-    if(this.ZoneIndex === ZoneIndex){
-      //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
-    }
-  });
+  //this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
+  //  if(this.ZoneIndex === ZoneIndex){
+  //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
+  //  }
+  //});
 
-  this.Controller.on('ZoneVolumePercentageChange', (Zone: number, ZoneIndex: number, VolumePercentage:number)=>{
-    //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
-  });
+  //this.Controller.on('ZoneVolumePercentageChange', (Zone: number, ZoneIndex: number, VolumePercentage:number)=>{
+  //  //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
+  //});
 
   this.platform.api.publishExternalAccessories(PLUGIN_NAME, [this.ReceiverAccessory]);
   }
@@ -186,9 +186,9 @@ export class AnthemReceiverPowerInputAccessory {
       .onGet(this.HandleMuteGet.bind(this))
       .onSet(this.HandleMuteSet.bind(this));
 
-    SpeakerService.getCharacteristic(this.platform.Characteristic.Volume)
-      .on('get', this.HandleVolumeGet.bind(this)) // Not working
-      .on('set', this.HandleVolumeSet.bind(this));
+    //SpeakerService.getCharacteristic(this.platform.Characteristic.Volume)
+    //  .on('get', this.HandleVolumeGet.bind(this)) // Not working
+    //  .on('set', this.HandleVolumeSet.bind(this));
 
     SpeakerService.getCharacteristic(this.platform.Characteristic.VolumeSelector)
       .onSet(this.HandleVolumeSelector.bind(this));
