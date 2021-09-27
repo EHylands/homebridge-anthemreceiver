@@ -8,6 +8,7 @@ export interface AnthemControllerEvent {
     'ZoneVolumePercentageChange': (Zone: number, ZoneIndex: number, VolumePercentage:number)=> void;
     'ZoneInputChange': (Zone: number, ZoneIndex: number, Input: number) => void;
     'InputNameChange':(Input: number, Name: string) => void;
+    'InputChange':(InputArray: string[]) => void;
     'ControllerError': (Error: AnthemControllerError, ErrorString: string) => void;
     'ShowDebugInfo':(DebugString: string)=> void;
   }
@@ -77,12 +78,14 @@ export class AnthemZone{
   private ActiveInput = 0;
   private IsPowered = false;
   private VolumePercentage = 0;
+  private Volume = 0;
   ZoneName = '';
 
   private PowerConfigured = false;
   private MutedConfigued = false;
   private ActiveInputConfigured = false;
   private VolumePercentageConfigured = false;
+  private VolumeConfigured = false;
 
   constructor(ZoneNumber: number, ZoneName: string, IsMainZone: boolean) {
     this.ZoneNumber = ZoneNumber;
@@ -121,13 +124,23 @@ export class AnthemZone{
     return this.VolumePercentage;
   }
 
+  GetVolume():number{
+    return this.Volume;
+  }
+
   SetVolumePercentage(VolumePercentage:number){
     this.VolumePercentage = VolumePercentage;
     this.VolumePercentageConfigured = true;
   }
 
+  SetVolume(Volume:number){
+    this.Volume = Volume;
+    this.VolumeConfigured = true;
+  }
+
   IsZoneConfigured():boolean{
-    return this.ActiveInputConfigured && this.PowerConfigured && this.MutedConfigued;
+    //return this.ActiveInputConfigured && this.PowerConfigured && this.MutedConfigued;
+    return this.PowerConfigured;
   }
 }
 
@@ -139,6 +152,8 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     private CurrentState = ControllerState.Idle;
     private CommandArray: string[] = [];
     private InputNameArray:string[] = [];
+    private InputNameArrayOld:string[] = [];
+
     private ZonesArray: AnthemZone[] = [];
 
     SerialNumber = '';
@@ -224,6 +239,20 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
     GetNumberOfInput(){
       return this.InputNameArray.length;
+    }
+
+    GetInputHasChange():boolean{
+      if(this.InputNameArray.length !== this.InputNameArrayOld.length){
+        return true;
+      }
+
+      for(let i = 0 ; i < this.InputNameArray.length ; i++){
+        if(this.InputNameArray[i] !== this.InputNameArrayOld[i]){
+          return true;
+        }
+      }
+
+      return false;
     }
 
     //
@@ -348,6 +377,11 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       //this.SendCommand();
     }
 
+    private GetZoneVolumeFromReceiver(ZoneIndex:number){
+      this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'VOL?');
+      //this.SendCommand();
+    }
+
     private GetZoneVolumePercentageFromReceiver(ZoneIndex:number){
       this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'PVOL?');
       //this.SendCommand();
@@ -420,12 +454,13 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       for(let i = 1 ; i <= this.InputNameArray.length ; i++){
         this.QueueCommand('ISN' + i + '?');
       }
+
       this.SendCommand();
     }
 
     //
     // Function GetZoneActiveInputFromReceiver()
-    // Get input name from receiver
+    // Get zone active input
     //
     // Availability: All model
     private GetZoneActiveInputFromReceiver(ZoneIndex:number){
@@ -638,7 +673,20 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     //
     // Availability: All model
     VolumeUp(ZoneIndex: number){
-      this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VUP');
+
+      const SupportedDevice = [
+        AnthemReceiverModel.MRX540,
+        AnthemReceiverModel.MRX740,
+        AnthemReceiverModel.MRX1140,
+        AnthemReceiverModel.AVM70,
+        AnthemReceiverModel.AVM90,
+      ];
+
+      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+        this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VUP');
+      } else{
+        this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VUP1');
+      }
       this.SendCommand();
     }
 
@@ -647,7 +695,20 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     //
     // Availability: All model
     VolumeDown(ZoneIndex: number){
-      this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VDN');
+
+      const SupportedDevice = [
+        AnthemReceiverModel.MRX540,
+        AnthemReceiverModel.MRX740,
+        AnthemReceiverModel.MRX1140,
+        AnthemReceiverModel.AVM70,
+        AnthemReceiverModel.AVM90,
+      ];
+
+      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+        this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VDN');
+      } else{
+        this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VDN1');
+      }
       this.SendCommand();
     }
 
@@ -724,6 +785,35 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       this.SendCommand();
     }
 
+
+    //
+    // Function UpdateOnZonePower
+    //
+    //
+    private UpdateOnZonePower(){
+      const SupportedDevice = [
+        AnthemReceiverModel.MRX540,
+        AnthemReceiverModel.MRX740,
+        AnthemReceiverModel.MRX1140,
+        AnthemReceiverModel.AVM70,
+        AnthemReceiverModel.AVM90,
+      ];
+
+      for(let i = 0 ; i < this.ZonesArray.length ; i ++ ){
+        this.GetZoneActiveInputFromReceiver(i);
+        this.GetIsZoneMutedFromReceiver(i);
+        this.GetZoneVolumeFromReceiver(i);
+        //this.GetZoneActiveInputARCEnabled(i);
+
+        if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+          this.GetZoneVolumePercentageFromReceiver(i);
+        }
+      }
+      this.GetConfigMenuState();
+      this.GetNumberOfInputFromReceiver();
+      this.SendCommand();
+    }
+
     //
     // Function Configure
     // Second step for controller configuration
@@ -751,13 +841,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
       for(let i = 0 ; i < this.ZonesArray.length ; i ++ ){
         this.GetIsZonePoweredFromReceiver(i);
-        this.GetZoneActiveInputFromReceiver(i);
-        this.GetIsZoneMutedFromReceiver(i);
-        this.GetZoneVolumePercentageFromReceiver(i);
-        //this.GetZoneActiveInputARCEnabled(i);
       }
-      this.GetConfigMenuState();
-      this.GetNumberOfInputFromReceiver();
       this.SendCommand();
     }
 
@@ -802,31 +886,32 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           }
 
           // Get number of input
-          if(this.CurrentState === ControllerState.Configure){
-            if(Response.substring(0, 3) === 'ICN'){
-              let NumberInput = Number(Response.substring(3, Response.length));
+          if(Response.substring(0, 3) === 'ICN'){
+            let NumberInput = Number(Response.substring(3, Response.length));
 
-              const SupportedDevice = [
-                AnthemReceiverModel.MRX540,
-                AnthemReceiverModel.MRX740,
-                AnthemReceiverModel.MRX1140,
-                AnthemReceiverModel.AVM70,
-                AnthemReceiverModel.AVM90,
-              ];
+            const SupportedDevice = [
+              AnthemReceiverModel.MRX540,
+              AnthemReceiverModel.MRX740,
+              AnthemReceiverModel.MRX1140,
+              AnthemReceiverModel.AVM70,
+              AnthemReceiverModel.AVM90,
+            ];
 
-              if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
-                this.InputNameArray = new Array(NumberInput);
-                this.GetInputsNameFromReceiver();
-              } else{
+            if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+              this.InputNameArrayOld = this.InputNameArray;
+              this.InputNameArray = new Array(NumberInput);
+
+              this.GetInputsNameFromReceiver();
+            } else{
               // Know limitation for the moment
               // Older model only support max of 9 inputs
-                if(NumberInput > 9){
-                  NumberInput = 9;
-                }
-                this.InputNameArray = new Array(NumberInput);
-
-                this.GetInputsNameFromReceiver_OLD();
+              if(NumberInput > 9){
+                NumberInput = 9;
               }
+              this.InputNameArrayOld = this.InputNameArray;
+              this.InputNameArray = new Array(NumberInput);
+
+              this.GetInputsNameFromReceiver_OLD();
             }
           }
 
@@ -834,6 +919,11 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           for(let j = 0 ; j < this.ZonesArray.length ; j++){
             if(Response.substring(0, 5) === ('Z' + this.ZonesArray[j].ZoneNumber + 'POW')){
               this.ZonesArray[j].SetIsPowered(Response[5] === '1');
+
+              // Update zone info when power is on
+              if(this.ZonesArray[j].GetIsPowered()){
+                this.UpdateOnZonePower();
+              }
             }
 
             if(this.CurrentState === ControllerState.Operation){
@@ -852,6 +942,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             }
           }
 
+          // Set VolumePercentage
           for(let j = 0 ; j < this.ZonesArray.length ; j++){
             if(Response.substring(0, 6) === ('Z' + this.ZonesArray[j].ZoneNumber + 'PVOL')){
               this.ZonesArray[j].SetVolumePercentage(Number(Response.substring(6, Response.length)));
@@ -860,6 +951,13 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             if(this.CurrentState === ControllerState.Operation){
               this.emit('ZoneVolumePercentageChange', this.ZonesArray[j].ZoneNumber, j, this.ZonesArray[j].GetVolumePercentage());
               break;
+            }
+          }
+
+          // Set Volume
+          for(let j = 0 ; j < this.ZonesArray.length ; j++){
+            if(Response.substring(0, 5) === ('Z' + this.ZonesArray[j].ZoneNumber + 'VOL')){
+              this.ZonesArray[j].SetVolume(Number(Response.substring(5, Response.length)));
             }
           }
 
@@ -874,8 +972,10 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
                 this.InputNameArray[InputNumber-1] = Name;
 
-                if(this.CurrentState === ControllerState.Operation){
-                  this.emit('InputNameChange', InputNumber, Name);
+                if(InputNumber === this.InputNameArray.length){
+                  if(this.GetInputHasChange()){
+                    this.emit('InputChange', this.InputNameArray);
+                  }
                 }
                 break;
               }
@@ -940,7 +1040,8 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
               && this.SoftwareVersion !== ''
               && this.SerialNumber !== ''
               && this.IsAllZoneConfigured()
-              && this.IsAllInputConfigured()){
+              //&& this.IsAllInputConfigured()
+            ){
 
               // Panel is configured, now ready for operation
               this.CurrentState = ControllerState.Operation;

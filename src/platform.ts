@@ -16,6 +16,8 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Port = '14999';
   private ReconnectTimeout = 30000;
 
+  private AnthemReceiverPowerInputArray: AnthemReceiverPowerInputAccessory[];
+
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
@@ -23,6 +25,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   ) {
 
     this.Controller = new AnthemController();
+    this.AnthemReceiverPowerInputArray = [];
 
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
@@ -54,6 +57,18 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
           this.log.debug(DebugString);
         });
 
+        this.Controller.on('InputChange', (InputArray)=>{
+
+          this.log.info('Discovered new inputs');
+          for(let i = 1 ; i <= InputArray.length; i++){
+            this.log.info('Input' + i + ': ' + InputArray[i-1]);
+          }
+
+          for(let i = 0 ; i < this.AnthemReceiverPowerInputArray.length ; i++){
+            this.AnthemReceiverPowerInputArray[i].SetInputs(InputArray);
+          }
+        });
+
         // Configure Controller Error Event
         this.ConfigureControllerError();
 
@@ -71,13 +86,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     if(this.Zone1Active){
       const AnthemReceiver = new AnthemReceiverPowerInputAccessory(this, this.Controller, this.Controller.GetZoneIndex(1));
-      this.log.debug('Controlling zone: ' + this.Controller.GetZoneNumber(AnthemReceiver.GetZoneIndex()));
+      this.log.debug('Adding zone to Homekit: ' + this.Controller.GetZoneNumber(AnthemReceiver.GetZoneIndex()));
+      this.AnthemReceiverPowerInputArray.push(AnthemReceiver);
     }
 
     if(this.Zone2Active){
       const AnthemReceiver2 = new AnthemReceiverPowerInputAccessory(this, this.Controller, this.Controller.GetZoneIndex(2));
-      this.log.debug('Controlling zone: ' + this.Controller.GetZoneNumber(AnthemReceiver2.GetZoneIndex()));
-
+      this.log.debug('Adding zone to Homekit: ' + this.Controller.GetZoneNumber(AnthemReceiver2.GetZoneIndex()));
+      this.AnthemReceiverPowerInputArray.push(AnthemReceiver2);
     }
   }
 
@@ -121,19 +137,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   private DumpControllerInfo(){
-    this.log.debug('Controller is configured');
-    this.log.debug('Model: ' + this.Controller.ReceiverModel);
-    this.log.debug('Serial Number: ' + this.Controller.SerialNumber);
-    this.log.debug('Software Version: ' + this.Controller.SoftwareVersion);
+    this.log.info('Controller is configured');
+    this.log.info('Model: ' + this.Controller.ReceiverModel);
+    this.log.info('Serial Number: ' + this.Controller.SerialNumber);
+    this.log.info('Software Version: ' + this.Controller.SoftwareVersion);
 
-    this.log.debug('Controlling ' + this.Controller.GetConfiguredZoneNumber() +' Zones');
+    this.log.info('Controlling ' + this.Controller.GetConfiguredZoneNumber() +' Zones');
     for(let i = 0 ; i < this.Controller.GetConfiguredZoneNumber() ; i++ ){
-      this.log.debug(' ' + (i+1) + ': ' + this.Controller.GetZoneName(i));
-    }
-    this.log.debug('Number of inputs: ' + this.Controller.GetNumberOfInput());
-
-    for(let i = 0 ; i < this.Controller.GetNumberOfInput() ; i++){
-      this.log.debug(' ' + (i+1) + ': ' + this.Controller.GetInputName(i));
+      this.log.info(' ' + (i+1) + ': ' + this.Controller.GetZoneName(i));
     }
   }
 
@@ -155,9 +166,9 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
       // Try to reconnect if network error
       if(Error === AnthemControllerError.CONNECTION_ERROR){
-        this.log.debug(Error + ': ' + ErrorString);
+        this.log.error(Error + ': ' + ErrorString);
         setTimeout(() => {
-          this.log.debug('Trying to reconnect ....');
+          this.log.error('Trying to reconnect ....');
           this.Controller.Connect(this.config.Host, this.config.Port);
         }, this.ReconnectTimeout);
 

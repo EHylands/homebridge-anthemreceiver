@@ -6,7 +6,9 @@ import { PLUGIN_NAME } from './settings';
 export class AnthemReceiverPowerInputAccessory {
   private ReceiverAccessory: PlatformAccessory;
   private TVService: Service;
-  private SpeakerService: Service;
+  //private SpeakerService: Service;
+
+  private HdmiInputService: Service[];
 
   constructor(
     private readonly platform: AnthemReceiverHomebridgePlatform,
@@ -17,6 +19,7 @@ export class AnthemReceiverPowerInputAccessory {
 
     this.ZoneIndex = ZoneIndex;
     const Name = this.Controller.GetZoneName(this.ZoneIndex);
+    this.HdmiInputService = [];
 
     const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
     this.Controller.SerialNumber + this.Controller.GetZoneNumber(ZoneIndex));
@@ -31,12 +34,14 @@ export class AnthemReceiverPowerInputAccessory {
     .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
 
   this.TVService = this.ConfigureTelevisionservice();
-  this.SpeakerService = this.ConfigureTelevisionSpeakerService();
+
+  // this.SpeakerService = this.ConfigureTelevisionSpeakerService();
 
   // Initialise plugin
-  this.TVService.setCharacteristic(this.platform.Characteristic.ActiveIdentifier,
-    this.Controller.GetZone(this.ZoneIndex).GetActiveInput());
-  this.TVService.setCharacteristic(this.platform.Characteristic.Active, this.Controller.GetZone(this.ZoneIndex).GetIsPowered());
+  //this.TVService.setCharacteristic(this.platform.Characteristic.ActiveIdentifier,
+  //  this.Controller.GetZone(this.ZoneIndex).GetActiveInput());
+
+  //this.TVService.setCharacteristic(this.platform.Characteristic.Active, this.Controller.GetZone(this.ZoneIndex).GetIsPowered());
 
   this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power: boolean) => {
     if(this.ZoneIndex === ZoneIndex){
@@ -52,15 +57,33 @@ export class AnthemReceiverPowerInputAccessory {
 
   this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
     if(this.ZoneIndex === ZoneIndex){
-      this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
+      //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
     }
   });
 
   this.Controller.on('ZoneVolumePercentageChange', (Zone: number, ZoneIndex: number, VolumePercentage:number)=>{
-    this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
+    //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
   });
 
   this.platform.api.publishExternalAccessories(PLUGIN_NAME, [this.ReceiverAccessory]);
+  }
+
+  SetInputs(InputArray: string[]){
+    for(let i = 0 ; i < this.HdmiInputService.length ; i++){
+      this.TVService.removeLinkedService(this.HdmiInputService[i]);
+      this.ReceiverAccessory.removeService(this.HdmiInputService[i]);
+    }
+
+    for (let i = 0; i < InputArray.length ; i++){
+      const hdmiInputService = this.ReceiverAccessory.addService(this.platform.Service.InputSource, 'hdmi'+(i+1), 'HDMI '+ (i+1));
+      hdmiInputService
+        .setCharacteristic(this.platform.Characteristic.Identifier, (i+1))
+        .setCharacteristic(this.platform.Characteristic.ConfiguredName, InputArray[i])
+        .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
+        .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.HDMI);
+      this.TVService.addLinkedService(hdmiInputService);
+      this.HdmiInputService.push(hdmiInputService);
+    }
   }
 
   ConfigureTelevisionservice():Service{
@@ -69,17 +92,6 @@ export class AnthemReceiverPowerInputAccessory {
     TVService.setCharacteristic(this.platform.Characteristic.ConfiguredName, Name);
     TVService.setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode,
       this.platform.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE);
-
-    // Configure inputs names
-    for (let i = 0; i < this.Controller.GetNumberOfInput() ; i++){
-      const hdmiInputService = this.ReceiverAccessory.addService(this.platform.Service.InputSource, 'hdmi'+(i+1), 'HDMI '+ (i+1));
-      hdmiInputService
-        .setCharacteristic(this.platform.Characteristic.Identifier, (i+1))
-        .setCharacteristic(this.platform.Characteristic.ConfiguredName, this.Controller.GetInputName(i))
-        .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
-        .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.HDMI);
-      TVService.addLinkedService(hdmiInputService);
-    }
 
     // Send change from homekit to Anthem Receiver - Power
     TVService.getCharacteristic(this.platform.Characteristic.Active)
@@ -201,7 +213,7 @@ export class AnthemReceiverPowerInputAccessory {
   // Not working for the moment.
   HandleVolumeGet(callback){
     const VP = this.Controller.GetZone(this.ZoneIndex).GetVolumePercentage();
-    this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VP);
+    //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VP);
     callback(VP);
   }
 
