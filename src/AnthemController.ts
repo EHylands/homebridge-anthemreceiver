@@ -1,5 +1,6 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
 import net = require('net');
+import { error } from 'console';
 
 export interface AnthemControllerEvent {
     'ControllerReadyForOperation': () => void;
@@ -452,9 +453,12 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       }
 
       for(let i = 1 ; i <= this.InputNameArray.length ; i++){
-        this.QueueCommand('ISN' + i + '?');
+        if(i < 10){
+          this.QueueCommand('ISN0' + i + '?');
+        } else{
+          this.QueueCommand('ISN' + i + '?');
+        }
       }
-
       this.SendCommand();
     }
 
@@ -473,7 +477,6 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     //
     // Availability: All model
     SetZoneInput(ZoneIndex: number, InputNumber: number){
-
       this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'INP' + InputNumber);
       this.SendCommand();
     }
@@ -790,7 +793,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Function UpdateOnZonePower
     //
     //
-    private UpdateOnZonePower(){
+    private UpdateOnZonePower(ZoneIndex:number){
       const SupportedDevice = [
         AnthemReceiverModel.MRX540,
         AnthemReceiverModel.MRX740,
@@ -799,16 +802,15 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         AnthemReceiverModel.AVM90,
       ];
 
-      for(let i = 0 ; i < this.ZonesArray.length ; i ++ ){
-        this.GetZoneActiveInputFromReceiver(i);
-        this.GetIsZoneMutedFromReceiver(i);
-        this.GetZoneVolumeFromReceiver(i);
-        //this.GetZoneActiveInputARCEnabled(i);
+      this.GetZoneActiveInputFromReceiver(ZoneIndex);
+      this.GetIsZoneMutedFromReceiver(ZoneIndex);
+      this.GetZoneVolumeFromReceiver(ZoneIndex);
+      //this.GetZoneActiveInputARCEnabled(i);
 
-        if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
-          this.GetZoneVolumePercentageFromReceiver(i);
-        }
+      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+        this.GetZoneVolumePercentageFromReceiver(ZoneIndex);
       }
+
       this.GetConfigMenuState();
       this.GetNumberOfInputFromReceiver();
       this.SendCommand();
@@ -887,7 +889,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
           // Get number of input
           if(Response.substring(0, 3) === 'ICN'){
-            let NumberInput = Number(Response.substring(3, Response.length));
+            const NumberInput = Number(Response.substring(3, Response.length));
 
             const SupportedDevice = [
               AnthemReceiverModel.MRX540,
@@ -900,17 +902,10 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
               this.InputNameArrayOld = this.InputNameArray;
               this.InputNameArray = new Array(NumberInput);
-
               this.GetInputsNameFromReceiver();
             } else{
-              // Know limitation for the moment
-              // Older model only support max of 9 inputs
-              if(NumberInput > 9){
-                NumberInput = 9;
-              }
               this.InputNameArrayOld = this.InputNameArray;
               this.InputNameArray = new Array(NumberInput);
-
               this.GetInputsNameFromReceiver_OLD();
             }
           }
@@ -922,7 +917,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
               // Update zone info when power is on
               if(this.ZonesArray[j].GetIsPowered()){
-                this.UpdateOnZonePower();
+                this.UpdateOnZonePower(j);
               }
             }
 
@@ -931,6 +926,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             }
           }
 
+          // Set Zone Mute
           for(let j = 0 ; j < this.ZonesArray.length ; j++){
             if(Response.substring(0, 5) === ('Z' + this.ZonesArray[j].ZoneNumber + 'MUT')){
               this.ZonesArray[j].SetIsMuted(Response[5] === '1');
@@ -984,13 +980,12 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
           // Get Input Name from older dervice function
           if(Response.substring(0, 3) === 'ISN'){
-            const input = Response[3];
-            const name = Response.substring(4, Response.length);
-            this.InputNameArray[Number(input) - 1] = name;
+            const input = Number(Response.substring(3, 5));
+            const name = Response.substring(5, Response.length);
+            this.InputNameArray[input - 1] = name;
             if(this.CurrentState === ControllerState.Operation){
               this.emit('InputNameChange', Number(input), name);
             }
-
           }
 
           // Get new actives inputs

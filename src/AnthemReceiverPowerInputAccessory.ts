@@ -12,7 +12,6 @@ export class AnthemReceiverPowerInputAccessory {
 
   constructor(
     private readonly platform: AnthemReceiverHomebridgePlatform,
-    //  private readonly accessory: PlatformAccessory,
     private readonly Controller: AnthemController,
     private readonly ZoneIndex: number,
   ) {
@@ -34,7 +33,6 @@ export class AnthemReceiverPowerInputAccessory {
     .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
 
   this.TVService = this.ConfigureTelevisionservice();
-
   this.SpeakerService = this.ConfigureTelevisionSpeakerService();
 
   // Initialise plugin

@@ -6,9 +6,9 @@ Homebridge Power and Input controller for Anthem AV Receiver. By default, the pl
 
 # Supported models
 
-- MRX 310, MRX 510, MRX 710
-- MRX 520, MRX 720, MRX 1120
-- MRX 540, MRX 740, MRX 1140 (tested)
+- MRX 310, MRX 510, MRX 710 (Not working)
+- MRX 520, MRX 720, MRX 1120 (Not working)
+- MRX 540, MRX 740, MRX 1140 (Tested)
 - AVM 60,  AVM 70,  AVM 90
 
 # Getting started
@@ -70,12 +70,10 @@ Zone1 and Zone2 options:
 
 
 # Releases
-## 0.3.6
-* Fixing various bugs for model series X10 and X20. 
+## 0.3.7
+* Trying to fix various bugs for model series X10 and X20. 
 
 # Known issues
-
 - Homebridge needs to be restarted if inputs are added or removed on the Receiver 
-- Model series X10 and X20 only support 9 inputs on this controller. 
 
 

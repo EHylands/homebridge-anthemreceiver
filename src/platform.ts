@@ -30,7 +30,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
 
-      this.log.debug('Finished initializing platform:', this.config.name);
+      this.log.debug('Finished initializing platform');
 
       // Do not start plugin if errors has been found in config file
       if(this.CheckConfigFile()){
