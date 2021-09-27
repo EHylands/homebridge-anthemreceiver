@@ -70,8 +70,8 @@ Zone1 and Zone2 options:
 
 
 # Releases
-## 0.3.1
-* Fixing proper model identification for X10 and X20 series. 
+## 0.3.6
+* Fixing bug for mode series X10 and X20. 
 
 # Known issues
 
