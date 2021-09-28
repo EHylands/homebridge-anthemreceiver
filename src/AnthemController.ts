@@ -1,6 +1,5 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
 import net = require('net');
-import { error } from 'console';
 
 export interface AnthemControllerEvent {
     'ControllerReadyForOperation': () => void;
@@ -344,7 +343,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
       if(SupportedDevice.indexOf(this.ReceiverModel) === -1){
         this.CurrentState = ControllerState.Idle;
-        this.emit('ControllerError', AnthemControllerError.COMMAND_NOT_SUPPORTED, 'GetMACAddress (IDN?)' );
+        this.emit('ControllerError', AnthemControllerError.COMMAND_NOT_SUPPORTED, 'GetMACAddress (IDN?)');
         return;
       }
       this.QueueCommand('IDN?');
