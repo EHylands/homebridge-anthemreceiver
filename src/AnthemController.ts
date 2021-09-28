@@ -879,7 +879,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           // Get Mac Address
           // For older models, use MAC address a serial number
           if(Response.substring(0, 3) === 'IDN'){
-            this.SoftwareVersion = Response.substring(3, Response.length);
+            this.SerialNumber = Response.substring(3, Response.length);
           }
 
           // Get software version
@@ -980,11 +980,15 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
           // Get Input Name from older dervice function
           if(Response.substring(0, 3) === 'ISN'){
-            const input = Number(Response.substring(3, 5));
-            const name = Response.substring(5, Response.length);
-            this.InputNameArray[input - 1] = name;
-            if(this.CurrentState === ControllerState.Operation){
-              this.emit('InputNameChange', Number(input), name);
+            const InputNumber = Number(Response.substring(3, 5));
+            const Name = Response.substring(5, Response.length);
+
+            this.InputNameArray[InputNumber - 1] = Name;
+
+            if(InputNumber === this.InputNameArray.length){
+              if(this.GetInputHasChange()){
+                this.emit('InputChange', this.InputNameArray);
+              }
             }
           }
 
