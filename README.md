@@ -1,6 +1,6 @@
 # homebridge-anthemreceiver
 
-Homebridge Power and Input controller for Anthem AV Receiver. By default, the plugin will create one accessory for each zone on the receiver. 
+Homebridge Power and Input accessory for Anthem AV Receiver. By default, the plugin will create one accessory for each zone on the receiver. 
 
 ![Screenshot](AR.png)
 
@@ -46,12 +46,6 @@ Zone1 and Zone2 options:
 ```
 
 # Adding accessory to Home App
-## iOS 14
-- Open Home App
-- Select "+" on the right upper corner of the screen and select "Add Accessory"
-- Select "I don't have a Code or Cannot Scan"
-- Select unconfigured accessory to be added.
-- Follow further on screen instructions to complete configuration
 ## iOS 15
 - Open Home App
 - Select "+" on the right upper corner of the screen and select "Add Accessory"
@@ -68,12 +62,12 @@ Zone1 and Zone2 options:
 * INFO button to show and hide menu display (Main Zone)
 * CENTER button so select option (Main Zone)
 
-
 # Releases
-## 0.3.8
-* Fixing various bugs for model series X10 and X20.  
+## 0.4.0
+* No changes to configuration file options.
+* Controller now gracefully reconnect to receiver on connection lost or timeout without crashing the pluglin.
+* Better handling of different series protocol: X10, X20 and X40.
+* Only able to test with MRX740. Please report success running the plugin on your model on Github project issues page (v0.4.0 Support thread).  
 
 # Known issues
-- Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to take effect in Homekit. For the moment, if inputs aare not visible under Television accessory, please kill and reopen Home App. 
-
-
+- Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to appear in Homekit. For the moment, if inputs are not visible under Television Accessory, please kill and reopen Home App. 
