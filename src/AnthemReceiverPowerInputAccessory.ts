@@ -35,12 +35,6 @@ export class AnthemReceiverPowerInputAccessory {
   this.TVService = this.ConfigureTelevisionservice();
   this.SpeakerService = this.ConfigureTelevisionSpeakerService();
 
-  // Initialise plugin
-  //this.TVService.setCharacteristic(this.platform.Characteristic.ActiveIdentifier,
-  //  this.Controller.GetZone(this.ZoneIndex).GetActiveInput());
-
-  //this.TVService.setCharacteristic(this.platform.Characteristic.Active, this.Controller.GetZone(this.ZoneIndex).GetIsPowered());
-
   this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power: boolean) => {
     if(this.ZoneIndex === ZoneIndex){
       this.TVService.updateCharacteristic(this.platform.Characteristic.Active, Power);
@@ -235,5 +229,4 @@ export class AnthemReceiverPowerInputAccessory {
     this.Controller.SetZoneVolumePercentage(this.ZoneIndex, newValue);
     callback();
   }
-
 }

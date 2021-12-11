@@ -15,6 +15,8 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Zone2Name = 'Anthem Zone 2';
   private Port = '14999';
   private ReconnectTimeout = 30000;
+  private InitialRun = true;
+  private IsRunning = false;
 
   private AnthemReceiverPowerInputArray: AnthemReceiverPowerInputAccessory[];
 
@@ -50,7 +52,18 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
         // Start operation when controller is ready
         this.Controller.on('ControllerReadyForOperation', () => {
           this.DumpControllerInfo();
-          this.discoverDevices();
+
+          if(this.InitialRun){
+            this.discoverDevices();
+            this.InitialRun = false;
+          }
+
+          this.log.info('-----------------------------------------');
+          this.log.info('Starting Controller Operation');
+          this.log.info('-----------------------------------------');
+
+          this.IsRunning = true;
+
         });
 
         this.Controller.on('ShowDebugInfo', (DebugString) => {
@@ -58,7 +71,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
         });
 
         this.Controller.on('InputChange', (InputArray)=>{
-
           this.log.info('Discovered new inputs');
           for(let i = 1 ; i <= InputArray.length; i++){
             this.log.info('Input' + i + ': ' + InputArray[i-1]);
@@ -84,17 +96,31 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
   discoverDevices() {
 
+    this.log.info('-----------------------------------------');
+    this.log.info('Configuring Hombebridge Plugin');
+    this.log.info('-----------------------------------------');
+
+    const Inputs = this.Controller.GetInputs();
+
     if(this.Zone1Active){
       const AnthemReceiver = new AnthemReceiverPowerInputAccessory(this, this.Controller, this.Controller.GetZoneIndex(1));
-      this.log.debug('Adding zone to Homekit: ' + this.Controller.GetZoneNumber(AnthemReceiver.GetZoneIndex()));
+      this.log.info('Adding Power/Input Accessory: Zone ' + this.Controller.GetZoneNumber(AnthemReceiver.GetZoneIndex()));
       this.AnthemReceiverPowerInputArray.push(AnthemReceiver);
+      AnthemReceiver.SetInputs(Inputs);
     }
 
     if(this.Zone2Active){
       const AnthemReceiver2 = new AnthemReceiverPowerInputAccessory(this, this.Controller, this.Controller.GetZoneIndex(2));
-      this.log.debug('Adding zone to Homekit: ' + this.Controller.GetZoneNumber(AnthemReceiver2.GetZoneIndex()));
+      this.log.info('Adding Power/Input Accessory: Zone ' + this.Controller.GetZoneNumber(AnthemReceiver2.GetZoneIndex()));
       this.AnthemReceiverPowerInputArray.push(AnthemReceiver2);
+      AnthemReceiver2.SetInputs(Inputs);
     }
+
+    this.log.info('Plugin Source Inputs Number: ' + Inputs.length);
+    for(let i = 0 ; i < Inputs.length ; i ++){
+      this.log.info('Input' + (i + 1) + ': ' + Inputs[i]);
+    }
+
   }
 
   private CheckConfigFile():boolean{
@@ -137,7 +163,9 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   private DumpControllerInfo(){
-    this.log.info('Controller is configured');
+    this.log.info('-----------------------------------------');
+    this.log.info('Anthem Receiver Controller Information');
+    this.log.info('-----------------------------------------');
     this.log.info('Model: ' + this.Controller.ReceiverModel);
     this.log.info('Serial Number: ' + this.Controller.SerialNumber);
     this.log.info('Software Version: ' + this.Controller.SoftwareVersion);
@@ -153,13 +181,11 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     this.Controller.on('ControllerError', (Error, ErrorString) => {
 
       if(Error === AnthemControllerError.COMMAND_NOT_SUPPORTED){
-        this.DumpControllerInfo();
         this.log.error(Error + ': ' + ErrorString);
         return;
       }
 
       if(Error === AnthemControllerError.INVALID_MODEL_STRING_RECEIVED){
-        this.DumpControllerInfo();
         this.log.error(Error + ': ' + ErrorString + ',  Assuming model MRX 740 for debug purpose');
         return;
       }
@@ -167,11 +193,17 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       // Try to reconnect if network error
       if(Error === AnthemControllerError.CONNECTION_ERROR){
         this.log.error(Error + ': ' + ErrorString);
+        if(this.IsRunning){
+          this.log.info('-----------------------------------------');
+          this.log.info('Stopping Controller Operation');
+          this.log.info('-----------------------------------------');
+        }
+        this.IsRunning = false;
+
         setTimeout(() => {
-          this.log.error('Trying to reconnect ....');
+          this.log.info('Trying to reconnect ....');
           this.Controller.Connect(this.config.Host, this.config.Port);
         }, this.ReconnectTimeout);
-
       }
     });
   }

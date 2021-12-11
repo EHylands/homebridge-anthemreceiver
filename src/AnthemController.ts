@@ -7,7 +7,6 @@ export interface AnthemControllerEvent {
     'ZoneMutedChange': (Zone: number, ZoneIndex: number, Muted:boolean)=> void;
     'ZoneVolumePercentageChange': (Zone: number, ZoneIndex: number, VolumePercentage:number)=> void;
     'ZoneInputChange': (Zone: number, ZoneIndex: number, Input: number) => void;
-    'InputNameChange':(Input: number, Name: string) => void;
     'InputChange':(InputArray: string[]) => void;
     'ControllerError': (Error: AnthemControllerError, ErrorString: string) => void;
     'ShowDebugInfo':(DebugString: string)=> void;
@@ -44,12 +43,29 @@ const AllAnthemReceiverModel = [
   AnthemReceiverModel.AVM90,
 ];
 
-  enum ControllerState {
+const ProtocolV01Model = [
+  AnthemReceiverModel.MRX310,
+  AnthemReceiverModel.MRX510,
+  AnthemReceiverModel.MRX710,
+  AnthemReceiverModel.MRX520,
+  AnthemReceiverModel.MRX720,
+  AnthemReceiverModel.MRX1120,
+  AnthemReceiverModel.AVM60,
+];
+
+const ProtocolV02Model = [
+  AnthemReceiverModel.MRX540,
+  AnthemReceiverModel.MRX740,
+  AnthemReceiverModel.MRX1140,
+  AnthemReceiverModel.AVM70,
+  AnthemReceiverModel.AVM90,
+];
+
+enum ControllerState {
     Idle,
-    GetModelFromReceiver,
     Configure,
     Operation,
-  }
+}
 
 export enum AnthemControllerError {
     CONNECTION_ERROR = 'Controller Connection Error',
@@ -77,15 +93,10 @@ export class AnthemZone{
   private IsMuted = false;
   private ActiveInput = 0;
   private IsPowered = false;
+  private PowerConfigured = false;
   private VolumePercentage = 0;
   private Volume = 0;
   ZoneName = '';
-
-  private PowerConfigured = false;
-  private MutedConfigued = false;
-  private ActiveInputConfigured = false;
-  private VolumePercentageConfigured = false;
-  private VolumeConfigured = false;
 
   constructor(ZoneNumber: number, ZoneName: string, IsMainZone: boolean) {
     this.ZoneNumber = ZoneNumber;
@@ -99,7 +110,6 @@ export class AnthemZone{
 
   SetIsMuted(Muted:boolean){
     this.IsMuted = Muted;
-    this.MutedConfigued = true;
   }
 
   GetIsPowered():boolean{
@@ -117,7 +127,6 @@ export class AnthemZone{
 
   SetActiveInput(ActiveInput: number){
     this.ActiveInput = ActiveInput;
-    this.ActiveInputConfigured = true;
   }
 
   GetVolumePercentage():number{
@@ -130,16 +139,13 @@ export class AnthemZone{
 
   SetVolumePercentage(VolumePercentage:number){
     this.VolumePercentage = VolumePercentage;
-    this.VolumePercentageConfigured = true;
   }
 
   SetVolume(Volume:number){
     this.Volume = Volume;
-    this.VolumeConfigured = true;
   }
 
   IsZoneConfigured():boolean{
-    //return this.ActiveInputConfigured && this.PowerConfigured && this.MutedConfigued;
     return this.PowerConfigured;
   }
 }
@@ -152,38 +158,55 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     private CurrentState = ControllerState.Idle;
     private CommandArray: string[] = [];
     private InputNameArray:string[] = [];
-    private InputNameArrayOld:string[] = [];
-
+    private InputNameArrayOld:string[] = []; // Used to check for any changes when inputs name are refreshed
     private ZonesArray: AnthemZone[] = [];
+    private ConfigMenuDisplayVisible = false;
+    private SocketTimeout = 300000; // 5 minutes
 
     SerialNumber = '';
     SoftwareVersion = '';
     ReceiverModel = AnthemReceiverModel.Undefined;
 
-    private ConfigMenuDisplayVisible = false;
-
     constructor() {
       super();
+    }
+
+    Connect(Host: string, Port:number){
+
+      this.Client = new net.Socket();
+      this.Client.setTimeout(this.SocketTimeout);
+
+      this.Host = Host;
+      this.Port = Port;
 
       this.Client.on('data', (data) => {
         this.AnalyseResponse(data);
       });
 
       this.Client.on('error', (err) =>{
+        this.CurrentState = ControllerState.Idle;
         this.emit('ControllerError', AnthemControllerError.CONNECTION_ERROR, err.message);
-      });
-    }
+        this.Client.destroy();
 
-    Connect(Host: string, Port:number){
-      this.Host = Host;
-      this.Port = Port;
+      });
+
+      this.Client.on('timeout', ()=>{
+        this.CurrentState = ControllerState.Idle;
+        this.emit('ControllerError', AnthemControllerError.CONNECTION_ERROR, 'Timeout');
+        this.Client.destroy();
+      });
+
       this.Client.connect(this.Port, this.Host, () => {
+        // This controller supports 2 protocols:
+        // - Protocol V02 used for X40 Model Serie
+        // - Protocol V01 used for X10 and X20 Model Serie
+        // - Need Model Number to send proper commands to receiver
         this.GetModel();
       });
     }
 
     AddControllingZone(NewZone: number, ZoneName: string, IsMainZone: boolean):boolean {
-      // We can only add a new zone while the controller is being configured
+      // We can only add a new zone while the controller is Idle
       if(this.CurrentState !== ControllerState.Idle){
         return false;
       }
@@ -233,15 +256,20 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       return this.ZonesArray.length;
     }
 
-    GetActiveInputForZoneIndex(Index: number){
-      return this.ZonesArray[Index].GetActiveInput();
-    }
-
     GetNumberOfInput(){
       return this.InputNameArray.length;
     }
 
-    GetInputHasChange():boolean{
+    GetInputs(){
+      return this.InputNameArray;
+    }
+
+    //
+    // Function GetInputHasChange()
+    // To be called after receiver updates inputs name
+    // Check if any input has changed with update
+    //
+    private GetInputHasChange():boolean{
       if(this.InputNameArray.length !== this.InputNameArrayOld.length){
         return true;
       }
@@ -251,21 +279,8 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           return true;
         }
       }
-
       return false;
     }
-
-    //
-    // Function GetInputName()
-    //
-    GetInputName(Input: number){
-      return this.InputNameArray[Input];
-    }
-
-    //
-    // Function for communication with receiver
-    //
-    // Not all functions are available for all receiver model
 
     //
     // Function Queue Command()
@@ -285,10 +300,36 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         CommandString = CommandString + this.CommandArray[i] + ';';
       }
 
-      this.emit('ShowDebugInfo', 'Sending command: ' + CommandString);
+      // Show extended debug information in homebridge log
+      this.emit('ShowDebugInfo', 'Sending: ' + CommandString);
 
       this.Client.write(CommandString);
       this.CommandArray = [];
+    }
+
+    //
+    // Function IsProtocolV01()
+    // Check if current model support protocol V01
+    // Anthem MRX 710-510-310 AVR
+    // Anthem MRX 1120-720-520 AVR and AVM 60
+    //
+    private IsProtocolV01():boolean{
+      if(ProtocolV01Model.indexOf(this.ReceiverModel) !== -1){
+        return true;
+      }
+      return false;
+    }
+
+    //
+    // Function IsProtocolV02()
+    // Check if current model support protocol V02
+    // Anthem MRX 1140-740-540 AVR and AVM 90-70 AVP
+    //
+    private IsProtocolV02():boolean{
+      if(ProtocolV02Model.indexOf(this.ReceiverModel) !== -1){
+        return true;
+      }
+      return false;
     }
 
     //
@@ -301,22 +342,27 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     }
 
     //
+    // Function SendKeepAlivePacket()
+    // Keep connection open (Receiver will process GetModel command even when powered off)
+    //
+    // Availability: All models supported by controller
+    private SendKeepAlivePacket(){
+      setTimeout(() => {
+        this.GetModelFromReceiver();
+        this.SendCommand();
+      }, this.SocketTimeout/2);
+    }
+
+    //
     // Function GetSerialNumberFromReceiver()
     // Get serial number from receiver
     //
-    // Availability: MRX 540, MRX 740, MRX 1140
+    // Availability:
+    // Anthem MRX 1140-740-540 AVR and AVM 90-70 AVP
+    //
     private GetSerialNumberFromReceiver(){
 
-      // Check if command is supported on this receiver
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) === -1){
+      if(!this.IsProtocolV02()){
         this.CurrentState = ControllerState.Idle;
         this.emit('ControllerError', AnthemControllerError.COMMAND_NOT_SUPPORTED, 'GetSerial (GSN?)');
         return;
@@ -328,20 +374,12 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Function GetMACAddress()
     // Get MAC Address from receiver. To be used as unique id
     //
-    // Availability: MRX 310, MRX 510, MRX 710, MRX 520, MRX 720, MRX 1120, AVM 60
+    // Availability:
+    // Anthem MRX 710-510-310 AVR
+    // Anthem MRX 1120-720-520 AVR and AVM 60
+    //
     GetMACAddress(){
-
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX310,
-        AnthemReceiverModel.MRX510,
-        AnthemReceiverModel.MRX710,
-        AnthemReceiverModel.MRX520,
-        AnthemReceiverModel.MRX720,
-        AnthemReceiverModel.MRX1120,
-        AnthemReceiverModel.AVM60,
-      ];
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) === -1){
+      if(!this.IsProtocolV01()){
         this.CurrentState = ControllerState.Idle;
         this.emit('ControllerError', AnthemControllerError.COMMAND_NOT_SUPPORTED, 'GetMACAddress (IDN?)');
         return;
@@ -374,17 +412,14 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Availability: All models supported by controller
     private GetIsZoneMutedFromReceiver(ZoneIndex: number){
       this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'MUT?');
-      //this.SendCommand();
     }
 
     private GetZoneVolumeFromReceiver(ZoneIndex:number){
       this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'VOL?');
-      //this.SendCommand();
     }
 
     private GetZoneVolumePercentageFromReceiver(ZoneIndex:number){
       this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'PVOL?');
-      //this.SendCommand();
     }
 
     SetZoneVolumePercentage(ZoneIndex:number, VolumePercentage: number){
@@ -405,59 +440,26 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Function GetInputsNameFromReceiver()
     // Get input name from receiver
     //
-    // Availability: MRX 540, MRX 740, MRX 1140
+    // Availability: All model
+    //
     private GetInputsNameFromReceiver(){
 
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
-
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) === -1){
-        this.CurrentState = ControllerState.Idle;
-        this.emit('ControllerError', AnthemControllerError.COMMAND_NOT_SUPPORTED, 'GetInputName (ISzIN?)');
-        return;
-      }
-
-      for(let i = 1 ; i <= this.InputNameArray.length ; i++){
-        this.QueueCommand('IS' + i +'IN?');
-      }
-      this.SendCommand();
-    }
-
-    //
-    // Function GetInputsNameFromReceiver_OLD()
-    // Get all input names from receiver
-    //
-    private GetInputsNameFromReceiver_OLD(){
-
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX310,
-        AnthemReceiverModel.MRX510,
-        AnthemReceiverModel.MRX710,
-        AnthemReceiverModel.MRX520,
-        AnthemReceiverModel.MRX720,
-        AnthemReceiverModel.MRX1120,
-        AnthemReceiverModel.AVM60,
-      ];
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) === -1){
-        this.CurrentState = ControllerState.Idle;
-        this.emit('ControllerError', AnthemControllerError.COMMAND_NOT_SUPPORTED, 'GetInputName (ISNyy?)');
-        return;
-      }
-
-      for(let i = 1 ; i <= this.InputNameArray.length ; i++){
-        if(i < 10){
-          this.QueueCommand('ISN0' + i + '?');
-        } else{
-          this.QueueCommand('ISN' + i + '?');
+      if(this.IsProtocolV01()){
+        for(let i = 1 ; i <= this.InputNameArray.length ; i++){
+          if(i < 10){
+            this.QueueCommand('ISN0' + i + '?');
+          } else{
+            this.QueueCommand('ISN' + i + '?');
+          }
         }
       }
+
+      if(this.IsProtocolV02()){
+        for(let i = 1 ; i <= this.InputNameArray.length ; i++){
+          this.QueueCommand('IS' + i +'IN?');
+        }
+      }
+
       this.SendCommand();
     }
 
@@ -481,45 +483,22 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     }
 
     //
-    // Function SelectNextInput()
-    // Iterate throught inputs
-    //
-    // Availability: All model
-    SelectNextInput(ZoneIndex: number){
-      let Input = this.ZonesArray[ZoneIndex].GetActiveInput();
-      Input = Input + 1;
-      if(Input > this.GetNumberOfInput()){
-        Input = 1;
-      }
-
-      this.SetZoneInput(ZoneIndex, Input);
-    }
-
-
-    //
     // Function GetZoneActiveInputARCEnabled()
     // Iterate throught inputs
     //
     // Availability: x40 models
     GetZoneActiveInputARCEnabled(ZoneIndex:number){
 
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
+      if(!this.IsProtocolV02()){
+        this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
+          'SetZoneActiveInputARCEnable command only supported on x40 models');
+        return;
+      }
 
       if(!this.ZonesArray[ZoneIndex].IsMainZone){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
           'ARC Command only available on main zone');
         return;
-      }
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) === -1){
-        this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
-          'SetZoneActiveInputARCEnable command only supported ond x40 models');
       }
 
       this.QueueCommand('IS' + (this.ZonesArray[ZoneIndex].GetActiveInput()+1) + 'ARC?');
@@ -532,13 +511,6 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     //
     // Availability: x40 models
     SetZoneActiveInputARCEnable(ZoneIndex:number, ARCEnabled:boolean){
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
 
       if(!this.ZonesArray[ZoneIndex].IsMainZone){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
@@ -546,9 +518,10 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         return;
       }
 
-      if(SupportedDevice.indexOf(this.ReceiverModel) === -1){
+      if(!this.IsProtocolV02()){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
           'SetZoneActiveInputARCEnable command only supported ond x40 models');
+        return;
       }
 
       if(ARCEnabled){
@@ -570,15 +543,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         return;
       }
 
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+      if(this.IsProtocolV02()){
         if(UP){
           this.QueueCommand('Z1AUP');
         } else{
@@ -596,17 +561,29 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       this.SendCommand();
     }
 
-
     // All zone need to have IsMuted, IsPowered and ActiveInput set before starting
     // Controller operation;
-
     IsAllZoneConfigured(){
-      for(let i = 0 ; i < this.ZonesArray.length ; i++){
-        if(this.ZonesArray[i].IsZoneConfigured() === false){
-          return false;
+
+      if(this.IsProtocolV01()){
+        for(let i = 0 ; i < this.ZonesArray.length ; i++){
+          if(this.ZonesArray[i].IsZoneConfigured() === false){
+            return false;
+          }
         }
+        return true;
       }
-      return true;
+
+      if(this.IsProtocolV02()){
+
+        for(let i = 0 ; i < this.ZonesArray.length ; i++){
+          if(this.ZonesArray[i].IsZoneConfigured() === false){
+            return false;
+          }
+        }
+
+        return this.IsAllInputConfigured();
+      }
     }
 
     //
@@ -676,20 +653,19 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Availability: All model
     VolumeUp(ZoneIndex: number){
 
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
+      const ZoneNumber = this.ZonesArray[ZoneIndex].ZoneNumber;
 
-      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
-        this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VUP');
-      } else{
-        this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VUP1');
+      if(this.IsProtocolV02()){
+        this.QueueCommand('Z'+ ZoneNumber + 'VUP');
+        this.SendCommand();
+        return;
       }
-      this.SendCommand();
+
+      if(this.IsProtocolV01()){
+        this.QueueCommand('Z'+ ZoneNumber + 'VUP1');
+        this.SendCommand();
+        return;
+      }
     }
 
     //
@@ -698,15 +674,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Availability: All model
     VolumeDown(ZoneIndex: number){
 
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+      if(this.IsProtocolV02()){
         this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VDN');
       } else{
         this.QueueCommand('Z'+ this.ZonesArray[ZoneIndex].ZoneNumber + 'VDN1');
@@ -731,7 +699,6 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Availability: All model
     GetConfigMenuState(){
       this.QueueCommand('Z1SMD?');
-      //this.SendCommand();
     }
 
     //
@@ -782,31 +749,22 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // First step for controller configuration
     // Need to get model from receiver to send proper command format afterward.
     private GetModel(){
-      this.CurrentState = ControllerState.GetModelFromReceiver;
+      this.CurrentState = ControllerState.Configure;
       this.GetModelFromReceiver();
       this.SendCommand();
     }
-
 
     //
     // Function UpdateOnZonePower
     //
     //
     private UpdateOnZonePower(ZoneIndex:number){
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
 
       this.GetZoneActiveInputFromReceiver(ZoneIndex);
       this.GetIsZoneMutedFromReceiver(ZoneIndex);
       this.GetZoneVolumeFromReceiver(ZoneIndex);
-      //this.GetZoneActiveInputARCEnabled(i);
 
-      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
+      if(this.IsProtocolV02()){
         this.GetZoneVolumePercentageFromReceiver(ZoneIndex);
       }
 
@@ -821,38 +779,37 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Need to get model from receiver to send proper command format afterward.
     private Configure(){
       this.CurrentState = ControllerState.Configure;
+
       this.GetsoftwareVersionFromReceiver();
 
-      // MRX 540, 740 and 1140 support GetSerialNumber
-      // Other model only support GetMACAdress. Usin MAC address
-      // as serial number for those models.
-      const SupportedDevice = [
-        AnthemReceiverModel.MRX540,
-        AnthemReceiverModel.MRX740,
-        AnthemReceiverModel.MRX1140,
-        AnthemReceiverModel.AVM70,
-        AnthemReceiverModel.AVM90,
-      ];
-
-      if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
-        this.GetSerialNumberFromReceiver();
-      } else{
+      if(this.IsProtocolV01()){
         this.GetMACAddress();
+      }
+
+      // Protocol 2 devices can read inputs number and inputs names even if zone is powered off
+      if(this.IsProtocolV02()){
+        this.GetSerialNumberFromReceiver();
+        this.GetNumberOfInputFromReceiver();
       }
 
       for(let i = 0 ; i < this.ZonesArray.length ; i ++ ){
         this.GetIsZonePoweredFromReceiver(i);
       }
+
       this.SendCommand();
     }
 
+    //
+    // Function AnalyseResponse
+    // Process data received from receiver
+    //
     private AnalyseResponse(Data: Buffer){
       const SplitString = Data.toString().split(';');
 
       for(let i = 0 ; i < SplitString.length - 1 ; i ++){
         let Response = SplitString[i];
 
-        this.emit('ShowDebugInfo', 'Reading response: ' + Response + '-');
+        this.emit('ShowDebugInfo', 'Reading: "' + Response + '"');
 
         // Remove white space if present
         if(Response.slice(Response.length-1) === ' '){
@@ -862,11 +819,13 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         if(Response.length !== 0){
 
           // Get Device Model
-          if(this.CurrentState === ControllerState.GetModelFromReceiver){
-            if(Response.substring(0, 3) === 'IDM'){
-              this.SetModel(Response.substring(3, Response.length));
-              this.CurrentState = ControllerState.Configure;
+          if(Response.substring(0, 3) === 'IDM'){
+            this.SetModel(Response.substring(3, Response.length));
+            if(this.CurrentState === ControllerState.Configure){
               this.Configure();
+            } else{
+              // Continue keep alive process
+              this.SendKeepAlivePacket();
             }
           }
 
@@ -876,7 +835,6 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           }
 
           // Get Mac Address
-          // For older models, use MAC address a serial number
           if(Response.substring(0, 3) === 'IDN'){
             this.SerialNumber = Response.substring(3, Response.length);
           }
@@ -889,24 +847,9 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           // Get number of input
           if(Response.substring(0, 3) === 'ICN'){
             const NumberInput = Number(Response.substring(3, Response.length));
-
-            const SupportedDevice = [
-              AnthemReceiverModel.MRX540,
-              AnthemReceiverModel.MRX740,
-              AnthemReceiverModel.MRX1140,
-              AnthemReceiverModel.AVM70,
-              AnthemReceiverModel.AVM90,
-            ];
-
-            if(SupportedDevice.indexOf(this.ReceiverModel) !== -1 ){
-              this.InputNameArrayOld = this.InputNameArray;
-              this.InputNameArray = new Array(NumberInput);
-              this.GetInputsNameFromReceiver();
-            } else{
-              this.InputNameArrayOld = this.InputNameArray;
-              this.InputNameArray = new Array(NumberInput);
-              this.GetInputsNameFromReceiver_OLD();
-            }
+            this.InputNameArrayOld = this.InputNameArray;
+            this.InputNameArray = new Array(NumberInput);
+            this.GetInputsNameFromReceiver();
           }
 
           // Get Zone power status
@@ -967,12 +910,14 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
                 this.InputNameArray[InputNumber-1] = Name;
 
-                if(InputNumber === this.InputNameArray.length){
-                  if(this.GetInputHasChange()){
-                    this.emit('InputChange', this.InputNameArray);
+                if(this.CurrentState === ControllerState.Operation){
+                  if(InputNumber === this.InputNameArray.length){
+                    if(this.GetInputHasChange()){
+                      this.emit('InputChange', this.InputNameArray);
+                    }
                   }
+                  break;
                 }
-                break;
               }
             }
           }
@@ -1031,19 +976,21 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             this.emit('ControllerError', AnthemControllerError.ZONE_IS_NOT_POWERED, ': ' + Response.substring(2, Response.length));
           }
 
-          // Checf if all information has been received to become ready for operatioin
+          // Check if all information has been received to become ready for operation
           if(this.CurrentState === ControllerState.Configure){
-
             if(this.ReceiverModel !== AnthemReceiverModel.Undefined
               && this.SoftwareVersion !== ''
               && this.SerialNumber !== ''
               && this.IsAllZoneConfigured()
-              //&& this.IsAllInputConfigured()
             ){
-
               // Panel is configured, now ready for operation
               this.CurrentState = ControllerState.Operation;
               this.emit('ControllerReadyForOperation');
+
+              // Start keep alice process (GetModel)
+              this.SendKeepAlivePacket();
+
+
             }
           }
         }
