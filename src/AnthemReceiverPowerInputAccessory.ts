@@ -7,21 +7,23 @@ export class AnthemReceiverPowerInputAccessory {
   private ReceiverAccessory: PlatformAccessory;
   private TVService: Service;
   private SpeakerService: Service;
-
   private HdmiInputService: Service[];
+  private ZoneIndex;
 
   constructor(
     private readonly platform: AnthemReceiverHomebridgePlatform,
     private readonly Controller: AnthemController,
-    private readonly ZoneIndex: number,
+    private readonly ZoneNumber: number,
   ) {
 
-    this.ZoneIndex = ZoneIndex;
+    this.ZoneIndex = this.Controller.GetZoneIndex(ZoneNumber);
     const Name = this.Controller.GetZoneName(this.ZoneIndex);
     this.HdmiInputService = [];
 
+    this.platform.log.info('Power/Input Accessory: Zone' + this.Controller.GetZoneNumber(this.ZoneIndex));
+
     const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
-    this.Controller.SerialNumber + this.Controller.GetZoneNumber(ZoneIndex));
+    this.Controller.SerialNumber + ZoneNumber);
     this.ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
     this.ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
 
@@ -125,26 +127,26 @@ export class AnthemReceiverPowerInputAccessory {
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_LEFT: {
-            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
+            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
               this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.LEFT);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_RIGHT: {
-            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
+            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
               this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.RIGHT);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.SELECT: {
-            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
+            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
               this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.SELECT);
             }
             break;
           }
 
           case this.platform.Characteristic.RemoteKey.BACK: {
-            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
+            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
               this.Controller.ToggleAudioListeningMode(this.ZoneIndex, true);
             }
             break;
@@ -155,7 +157,7 @@ export class AnthemReceiverPowerInputAccessory {
             break;
           }
           case this.platform.Characteristic.RemoteKey.INFORMATION: {
-            if(this.Controller.GetZone(this.ZoneIndex).IsMainZone){
+            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
               this.Controller.ToggleConfigMenu();
             }
             break;

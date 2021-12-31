@@ -89,7 +89,7 @@ export enum AnthemKeyCode {
 
 export class AnthemZone{
   ZoneNumber = 0;
-  IsMainZone = false;
+  private IsMainZone = false;
   private IsMuted = false;
   private ActiveInput = 0;
   private IsPowered = false;
@@ -119,6 +119,10 @@ export class AnthemZone{
   SetIsPowered(Powered: boolean){
     this.IsPowered = Powered;
     this.PowerConfigured = true;
+  }
+
+  GetIsMainZone():boolean{
+    return this.IsMainZone;
   }
 
   GetActiveInput():number{
@@ -262,6 +266,15 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
     GetInputs(){
       return this.InputNameArray;
+    }
+
+    SwitchInput(ZoneIndex: number){
+      let Input = this.ZonesArray[ZoneIndex].GetActiveInput();
+      Input++;
+      if(Input > this.InputNameArray.length){
+        Input = 1;
+      }
+      this.SetZoneInput(ZoneIndex, Input);
     }
 
     //
@@ -495,7 +508,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         return;
       }
 
-      if(!this.ZonesArray[ZoneIndex].IsMainZone){
+      if(!this.ZonesArray[ZoneIndex].GetIsMainZone()){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
           'ARC Command only available on main zone');
         return;
@@ -512,7 +525,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Availability: x40 models
     SetZoneActiveInputARCEnable(ZoneIndex:number, ARCEnabled:boolean){
 
-      if(!this.ZonesArray[ZoneIndex].IsMainZone){
+      if(!this.ZonesArray[ZoneIndex].GetIsMainZone()){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
           'ARC Command only available on main zone');
         return;
@@ -538,7 +551,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     //
     // Availability: All model
     ToggleAudioListeningMode(ZoneIndex:number, UP: boolean){
-      if(!this.ZonesArray[ZoneIndex].IsMainZone){
+      if(!this.ZonesArray[ZoneIndex].GetIsMainZone()){
         this.emit('ControllerError', AnthemControllerError.COMMAND_ONLY_AVAILABLE_ON_MAIN_ZONE, '');
         return;
       }
