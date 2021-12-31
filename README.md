@@ -75,7 +75,7 @@ Homebridge plugin for Anthem AV Receiver.
 # Releases
 ## 0.5.0
 - Adding Power, Mute and Input accessories for Zone1 and Zone2
-- Adding Audio Listening mode accessory for Zone1
+- Adding Audio Listening Mode accessory for Zone1
 
 ## 0.4.0
 * No changes to configuration file options.
