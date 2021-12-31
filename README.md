@@ -4,7 +4,7 @@ Homebridge plugin for Anthem AV Receiver.
 - Zone 1 and Zone 2 Power, Mute and Input accessories
 - Zone 1 Audio Listenning Mode accessory
 
-![Screenshot](0.5.0.png)
+![Screenshot](0.5.0.jpg)
 
 # Supported models
 - AVM 60,  AVM 70,  AVM 90 (Needs testing)
