@@ -1,6 +1,6 @@
 # homebridge-anthemreceiver
 Homebridge plugin for Anthem AV Receiver.
-- Zone 1 and Zone 2 Power/Input accessories (External television accessories to be manually added in Home App)
+- Zone 1 and Zone 2 Power/Input accessories (External accessories to be manually added in Home App)
 - Zone 1 and Zone 2 Power, Mute and Input accessories
 - Zone 1 Audio Listenning Mode accessory
 
@@ -18,7 +18,7 @@ Homebridge plugin for Anthem AV Receiver.
 - Enable Connected Standby option on Anthem Receiver (Web UI: System setup -> General -> General Setting)
 - Configure plugin by filling config.json or using Homebridge UI interface
 - Restart Homebridge server
-- Power, Mute, Input and Audio Listenning Mode accessories will be add automatically if enabled. 
+- Power, Mute, Input and Audio Listenning Mode accessories will be added automatically if enabled. 
 - Power/Input accessories are to be manually added in Home App. This step is needed for Apple Remote to be present in control center. See procedure below.
 
 # Configuration options
@@ -84,5 +84,5 @@ Homebridge plugin for Anthem AV Receiver.
 * Only able to test with MRX740. Please report success running the plugin on your model on Github project issues page (v0.4.0 Support thread).  
 
 # Known issues
-- Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to appear in Homekit. For the moment, if inputs are not visible under Television Accessory, please kill and reopen Home App. 
-- It takes a few seconds for the receiver to become responsive to HomeKit commands even if the receiver reports being powered on. 
+- Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to appear in HomeKit. If inputs are not visible under Power/Input Accessory, please kill and reopen Home App. 
+- It takes a few seconds for the receiver to become responsive to HomeKit commands even if the receiver reports being powered on.
