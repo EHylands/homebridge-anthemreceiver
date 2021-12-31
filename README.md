@@ -34,7 +34,7 @@ Homebridge plugin for Anthem AV Receiver.
 ```
 {
     "platform": "AnthemReceiver",
-    "Host": "192.168.10.78",
+    "Host": "192.168.1.1",
     "Port": 14999,
     "Zone1": {
         "Active": true,
