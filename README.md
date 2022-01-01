@@ -1,4 +1,6 @@
 # homebridge-anthemreceiver
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
+[![npm downloads](https://badgen.net/npm/dt/homebridge-anthemreceiver)](https://www.npmjs.com/package/homebridge-anthemreceiver)
 Homebridge plugin for Anthem AV Receiver.
 - Zone 1 and Zone 2 Power/Input accessories (External accessories to be manually added in Home App)
 - Zone 1 and Zone 2 Power, Mute and Input accessories
