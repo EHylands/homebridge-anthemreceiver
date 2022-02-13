@@ -22,9 +22,15 @@
         "properties":{
           "Active":{
             "title": "Power/Input Accessory (HomeKit external television accessory)",
-            "description": "This accessory needs to be manually added in Home App",
             "type": "boolean",
             "default": true
+          },
+          "Name": {
+            "title": "Custom Text",
+            "type": "string",
+            "required": false,
+            "placeholder": "Zone 1",
+            "description": "This accessory needs to be manually added in Home App"
           },
           "Power": {
             "title": "Power Accessory",
@@ -65,9 +71,15 @@
         "properties":{
           "Active":{
             "title": "Power/Input Accessory (HomeKit external television accessory)",
-            "description": "This accessory needs to be manually added in Home App",
             "type": "boolean",
             "default": true
+          },
+          "Name": {
+            "title": "Custom Text",
+            "type": "string",
+            "required": false,
+            "placeholder": "Zone 2",
+            "description": "This accessory needs to be manually added in Home App"
           },
           "Power": {
             "title": "Power Accessory",
