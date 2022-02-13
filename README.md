@@ -44,7 +44,6 @@ Homebridge plugin for Anthem Receiver.
     "Zone1": {
         "Active": true,
         "ARC": true,
-        "Name": "Zone 1",
         "Power": true,
         "Volume": true,
         "Mute": true,
@@ -53,7 +52,6 @@ Homebridge plugin for Anthem Receiver.
     },
     "Zone2": {
         "Active": true,
-        "Name": "Zone 2",
         "Power": true,
         "Volume": true,
         "Input": true,
