@@ -22,7 +22,7 @@ export class AnthemReceiverPowerInputAccessory {
 
     this.platform.log.info('Power/Input Accessory: Zone' + this.Controller.GetZoneNumber(this.ZoneIndex));
 
-    const uuid = this.platform.api.hap.uuid.generate('test2 Anthem_Receiver' + this.Controller.ReceiverModel +
+    const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
     this.Controller.SerialNumber + ZoneNumber);
     this.ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
     this.ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
