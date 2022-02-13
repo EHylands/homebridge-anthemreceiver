@@ -4,6 +4,8 @@ import { AnthemReceiverMuteAccessory } from './AnthemReceiverMuteAccessory';
 import { AnthemReceiverPowerAccessory } from './AnthemReceiverPowerAccessory';
 import { AnthemReceiverInputAccessory } from './AnthemReceiverInputAccessory';
 import { AnthemReceiverALMAccessory } from './AnthemReceiverALMAccessory';
+import { AnthemReceiverARCAccessory } from './AnthemReceiverARCAccessory';
+import { AnthemReceiverVolumeAccessory } from './AnthemReceiverVolumeAccessory';
 import { AnthemController, AnthemControllerError } from './AnthemController';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 
@@ -27,6 +29,9 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Zone1ALM = false;
   private Zone1Input = false;
   private Zone2Input = false;
+  private Zone1ARC = false;
+  private Zone1Volume = false;
+  private Zone2Volume = false;
 
   private Port = '14999';
   private ReconnectTimeout = 30000;
@@ -167,11 +172,59 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.AddALMAccessory(1);
     }
 
+    if(this.Zone1ARC){
+      this.ADDArcAccessory(1);
+    }
+
+    if(this.Zone1Volume){
+      this.ADDVolumeAccessory(1);
+    }
+
+    if(this.Zone2Volume){
+      this.ADDVolumeAccessory(2);
+    }
+
     this.DeviceCacheCleanUp();
   }
 
-  AddALMAccessory(ZoneNumber: number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'ALM Accessory');
+  private ADDVolumeAccessory(ZoneNumber: number){
+
+    if(!this.Controller.IsProtocolV02()){
+      this.log.error('Volume Accessory: Zone' + ZoneNumber + ' Not adding accessory (only supported on X40 Serie)');
+      return;
+    }
+
+    const uuid = this.api.hap.uuid.generate('test' + this.Controller.SerialNumber + ZoneNumber + 'Volume');
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+    if (existingAccessory) {
+      new AnthemReceiverVolumeAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      this.CreatedAccessories.push(existingAccessory);
+    } else{
+      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Volume', uuid);
+      this.CreatedAccessories.push(accessory);
+      new AnthemReceiverVolumeAccessory(this, accessory, this.Controller, ZoneNumber);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.CreatedAccessories.push(accessory);
+    }
+  }
+
+  private ADDArcAccessory(ZoneNumber: number){
+    const uuid = this.api.hap.uuid.generate('test' + this.Controller.SerialNumber + ZoneNumber + 'ARC');
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+    if (existingAccessory) {
+      new AnthemReceiverARCAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      this.CreatedAccessories.push(existingAccessory);
+    } else{
+      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ARC', uuid);
+      this.CreatedAccessories.push(accessory);
+      new AnthemReceiverARCAccessory(this, accessory, this.Controller, ZoneNumber);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.CreatedAccessories.push(accessory);
+    }
+  }
+
+  private AddALMAccessory(ZoneNumber: number){
+    const uuid = this.api.hap.uuid.generate('test' + this.Controller.SerialNumber + ZoneNumber + 'ALM Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
       new AnthemReceiverALMAccessory(this, existingAccessory, this.Controller, ZoneNumber);
@@ -186,7 +239,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   AddMuteAccessory(ZoneNumber: number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Mute Accessory');
+    const uuid = this.api.hap.uuid.generate('test' + this.Controller.SerialNumber + ZoneNumber + 'Mute Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
       new AnthemReceiverMuteAccessory(this, existingAccessory, this.Controller, ZoneNumber);
@@ -201,7 +254,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   AddPowerAccessory(ZoneNumber:number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Power Accessory');
+    const uuid = this.api.hap.uuid.generate('test' + this.Controller.SerialNumber + ZoneNumber + 'Power Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
       new AnthemReceiverPowerAccessory(this, existingAccessory, this.Controller, ZoneNumber);
@@ -216,7 +269,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   AddInputAccessory(ZoneNumber:number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Input Accessory');
+    const uuid = this.api.hap.uuid.generate('test' + this.Controller.SerialNumber + ZoneNumber + 'Input Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
       new AnthemReceiverInputAccessory(this, existingAccessory, this.Controller, ZoneNumber);
@@ -252,14 +305,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.Zone2Active = this.config.Zone2.Active;
     }
 
-    if(this.config.Zone1.Name !== undefined){
-      this.Zone1Name = this.config.Zone1.Name;
-    }
-
-    if(this.config.Zone2.Name !== undefined){
-      this.Zone2Name = this.config.Zone2.Name;
-    }
-
     if(this.config.Zone1.Mute !== undefined){
       this.Zone1Mute = this.config.Zone1.Mute;
     }
@@ -288,6 +333,18 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.Zone1ALM = this.config.Zone1.ALM;
     }
 
+    if(this.config.Zone1.ARC !== undefined){
+      this.Zone1ARC = this.config.Zone1.ARC;
+    }
+
+    if(this.config.Zone1.Volume !== undefined){
+      this.Zone1Volume = this.config.Zone1.Volume;
+    }
+
+    if(this.config.Zone2.Volume !== undefined){
+      this.Zone2Volume = this.config.Zone2.Volume;
+    }
+
     return true;
   }
 
@@ -309,19 +366,19 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     this.Controller.on('ControllerError', (Error, ErrorString) => {
 
+      this.log.error(Error + ': ' + ErrorString);
+
       if(Error === AnthemControllerError.COMMAND_NOT_SUPPORTED){
-        this.log.error(Error + ': ' + ErrorString);
         return;
       }
 
       if(Error === AnthemControllerError.INVALID_MODEL_STRING_RECEIVED){
-        this.log.error(Error + ': ' + ErrorString + ',  Assuming model MRX 740 for debug purpose');
+        this.log.error('Assuming model MRX 740 for debug purpose');
         return;
       }
 
       // Try to reconnect if network error
       if(Error === AnthemControllerError.CONNECTION_ERROR){
-        this.log.error(Error + ': ' + ErrorString);
         if(this.IsRunning){
           this.log.info('-----------------------------------------');
           this.log.info('Stopping Controller Operation');

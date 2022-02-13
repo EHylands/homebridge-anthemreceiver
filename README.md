@@ -2,37 +2,39 @@
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 [![npm downloads](https://badgen.net/npm/dt/homebridge-anthemreceiver)](https://www.npmjs.com/package/homebridge-anthemreceiver)
 
-Homebridge plugin for Anthem AV Receiver.
+Homebridge plugin for Anthem Receiver.
 - Zone 1 and Zone 2 Power/Input accessories (External accessories to be manually added in Home App)
-- Zone 1 and Zone 2 Power, Mute and Input accessories
-- Zone 1 Audio Listenning Mode accessory
+- Zone 1 and Zone 2 Power, Volume, Mute and Input accessories
+- Zone 1 ARC and Audio Listenning Mode accessories
 
-![Screenshot](0.5.0.jpg)
+![Screenshot](0.5.1.jpg)
 
 # Supported models
-- AVM 60,  AVM 70,  AVM 90 (Needs testing)
-- MRX 310, MRX 510, MRX 710 (Needs testing)
-- MRX 520, MRX 720, MRX 1120 (Tested)
-- MRX 540, MRX 740, MRX 1140 (Tested)
+- AVM 60,  AVM 70,  AVM 90 
+- MRX 310, MRX 510, MRX 710 
+- MRX 520, MRX 720, MRX 1120 
+- MRX 540, MRX 740, MRX 1140
 
 # Getting started
-- Install Homebridge
+- Install Homebridge and Homebridge UI
 - Install homebridge-anthemreceiver plugin
 - Enable Connected Standby option on Anthem Receiver (Web UI: System setup -> General -> General Setting)
-- Configure plugin by filling config.json or using Homebridge UI interface
+- Configure plugin by filling config.json or by using Homebridge UI interface
 - Restart Homebridge server
-- Power, Mute, Input and Audio Listenning Mode accessories will be added automatically if enabled. 
+- ARC, Power, Volume, Mute, Input and Audio Listenning Mode accessories will be added automatically if enabled. 
 - Power/Input accessories are to be manually added in Home App. This step is needed for Apple Remote to be present in control center. See procedure below.
 
 # Configuration options
 * `Host`: IP address or hostname of Anthem receiver
 * `Port`: Default to 14999, use value set up in receiver
 * `Active`: Publish Zone External Power/Input accessory 
-* `Name`: Zone External Power/Input accessory custom name. Defaults to "Zone1" and "Zone2"
 * `Power`: Add Zone Power accessory (Toggle Zone on and off status)
+* `Volume`: Add Zone Volume accessory (Toggle Zone mute status and control volume level)
 * `Mute`: Add Zone Mute accessory (Toggle Zone mute status)
 * `Input`: Add Zone Input accessory (Cycle Zone active input)
+* `ARC`: Add Zone1 ARC accessory (Toggle Zone1 ARC status, ARC neends to be configured)
 * `ALM`: Add Zone1 Audio Listenning Mode accessory (Cycle Zone1 Current Audio Mode)
+
 
 ```
 {
@@ -41,8 +43,10 @@ Homebridge plugin for Anthem AV Receiver.
     "Port": 14999,
     "Zone1": {
         "Active": true,
+        "ARC": true,
         "Name": "Zone 1",
         "Power": true,
+        "Volume": true,
         "Mute": true,
         "Input": true,
         "ALM": true
@@ -51,6 +55,7 @@ Homebridge plugin for Anthem AV Receiver.
         "Active": true,
         "Name": "Zone 2",
         "Power": true,
+        "Volume": true,
         "Input": true,
         "Mute": true
     }
@@ -76,6 +81,11 @@ Homebridge plugin for Anthem AV Receiver.
 * CENTER button so select option (Main Zone)
 
 # Releases
+## 0.5.1
+- Adding Volume accessory for Zone1 and Zone2 (Only available for X40 serie receiver)
+- Adding ARC accessory for Zone1
+- Removing Custom Text option for Power/Input accessories. Custom name should be set and changed in Home App
+
 ## 0.5.0
 - Adding Power, Mute and Input accessories for Zone1 and Zone2
 - Adding Audio Listening Mode accessory for Zone1
@@ -88,4 +98,4 @@ Homebridge plugin for Anthem AV Receiver.
 
 # Known issues
 - Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to appear in HomeKit. If inputs are not visible under Power/Input Accessory, please kill and reopen Home App. 
-- It takes a few seconds for the receiver to become responsive to HomeKit commands even if the receiver reports being powered on.
+- It takes a few seconds for the receiver to become responsive to HomeKit commands on startup even if the receiver reports being powered on in Homekit.

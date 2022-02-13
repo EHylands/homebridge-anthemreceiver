@@ -6,6 +6,7 @@ export interface AnthemControllerEvent {
     'ZonePowerChange': (Zone: number, ZoneIndex: number, Power: boolean) => void;
     'ZoneMutedChange': (Zone: number, ZoneIndex: number, Muted:boolean)=> void;
     'ZoneVolumePercentageChange': (Zone: number, ZoneIndex: number, VolumePercentage:number)=> void;
+    'ZoneARCEnabledChange':(Zone: number, ZoneIndex: number, ARCEnabled:boolean)=>void;
     'ZoneInputChange': (Zone: number, ZoneIndex: number, Input: number) => void;
     'InputChange':(InputArray: string[]) => void;
     'ControllerError': (Error: AnthemControllerError, ErrorString: string) => void;
@@ -91,7 +92,9 @@ export class AnthemZone{
   ZoneNumber = 0;
   private IsMainZone = false;
   private IsMuted = false;
+  private ARCConfigured = true;
   private ActiveInput = 0;
+  private ActiveInputARCEnabled = false;
   private IsPowered = false;
   private PowerConfigured = false;
   private VolumePercentage = 0;
@@ -131,6 +134,22 @@ export class AnthemZone{
 
   SetActiveInput(ActiveInput: number){
     this.ActiveInput = ActiveInput;
+  }
+
+  GetARCConfigured():boolean{
+    return this.ARCConfigured;
+  }
+
+  SetARCConfigured(ARCConfigured:boolean){
+    this.ARCConfigured = ARCConfigured;
+  }
+
+  GetActiveInputARCEnabled():boolean{
+    return this.ActiveInputARCEnabled;
+  }
+
+  SetActiveInputARCEnabled(ARCEnabled:boolean){
+    this.ActiveInputARCEnabled = ARCEnabled;
   }
 
   GetVolumePercentage():number{
@@ -326,7 +345,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Anthem MRX 710-510-310 AVR
     // Anthem MRX 1120-720-520 AVR and AVM 60
     //
-    private IsProtocolV01():boolean{
+    IsProtocolV01():boolean{
       if(ProtocolV01Model.indexOf(this.ReceiverModel) !== -1){
         return true;
       }
@@ -338,7 +357,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Check if current model support protocol V02
     // Anthem MRX 1140-740-540 AVR and AVM 90-70 AVP
     //
-    private IsProtocolV02():boolean{
+    IsProtocolV02():boolean{
       if(ProtocolV02Model.indexOf(this.ReceiverModel) !== -1){
         return true;
       }
@@ -496,34 +515,26 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     }
 
     //
-    // Function GetZoneActiveInputARCEnabled()
-    // Iterate throught inputs
+    // Function GetARCConfigured()
     //
     // Availability: x40 models
-    GetZoneActiveInputARCEnabled(ZoneIndex:number){
+    private GetARCConfigured(){
 
       if(!this.IsProtocolV02()){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
-          'SetZoneActiveInputARCEnable command only supported on x40 models');
+          'GetARCConfigured command only supported on x40 models');
         return;
       }
 
-      if(!this.ZonesArray[ZoneIndex].GetIsMainZone()){
-        this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
-          'ARC Command only available on main zone');
-        return;
-      }
-
-      this.QueueCommand('IS' + (this.ZonesArray[ZoneIndex].GetActiveInput()+1) + 'ARC?');
+      this.QueueCommand('Z1ARCVAL?');
       this.SendCommand();
     }
 
     //
-    // Function SetZoneActiveInputARCEnable()
-    // Iterate throught inputs
+    // Function GetZoneARCEnabled()
     //
-    // Availability: x40 models
-    SetZoneActiveInputARCEnable(ZoneIndex:number, ARCEnabled:boolean){
+    // Availability: All model
+    GetZoneARCEnabled(ZoneIndex:number){
 
       if(!this.ZonesArray[ZoneIndex].GetIsMainZone()){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
@@ -531,17 +542,48 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         return;
       }
 
-      if(!this.IsProtocolV02()){
+      if(this.IsProtocolV01()){
+        this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'ARC?');
+      }
+
+      if(this.IsProtocolV02()){
+        this.QueueCommand('IS' + this.ZonesArray[ZoneIndex].GetActiveInput() +'ARC?');
+      }
+
+      this.SendCommand();
+    }
+
+    //
+    // Function SetZoneARCEnabled()
+    //
+    // Availability: All model
+    SetZoneARCEnabled(ZoneIndex:number, ARCEnabled:boolean){
+
+      if(!this.ZonesArray[ZoneIndex].GetIsMainZone()){
         this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
-          'SetZoneActiveInputARCEnable command only supported ond x40 models');
+          'ARC Command only available on main zone');
         return;
       }
 
-      if(ARCEnabled){
-        this.QueueCommand('IS' + this.ZonesArray[ZoneIndex].GetActiveInput() +'ARC' + '1');
-      }else{
-        this.QueueCommand('IS' + this.ZonesArray[ZoneIndex].GetActiveInput() +'ARC' + '0');
+      if(this.IsProtocolV02() && !this.ZonesArray[ZoneIndex].GetARCConfigured()){
+        this.emit('ControllerError', AnthemControllerError.INVALID_COMMAND,
+          'ARC is not configured on main zone');
+        return;
       }
+
+      let CommandString = '0';
+      if(ARCEnabled){
+        CommandString = '1';
+      }
+
+      if(this.IsProtocolV01()){
+        this.QueueCommand('Z' + this.ZonesArray[ZoneIndex].ZoneNumber + 'ARC' + CommandString);
+      }
+
+      if(this.IsProtocolV02()){
+        this.QueueCommand('IS' + this.ZonesArray[ZoneIndex].GetActiveInput() +'ARC' + CommandString);
+      }
+
       this.SendCommand();
     }
 
@@ -803,6 +845,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       if(this.IsProtocolV02()){
         this.GetSerialNumberFromReceiver();
         this.GetNumberOfInputFromReceiver();
+        this.GetARCConfigured();
       }
 
       for(let i = 0 ; i < this.ZonesArray.length ; i ++ ){
@@ -897,11 +940,11 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           for(let j = 0 ; j < this.ZonesArray.length ; j++){
             if(Response.substring(0, 6) === ('Z' + this.ZonesArray[j].ZoneNumber + 'PVOL')){
               this.ZonesArray[j].SetVolumePercentage(Number(Response.substring(6, Response.length)));
-            }
 
-            if(this.CurrentState === ControllerState.Operation){
-              this.emit('ZoneVolumePercentageChange', this.ZonesArray[j].ZoneNumber, j, this.ZonesArray[j].GetVolumePercentage());
-              break;
+              if(this.CurrentState === ControllerState.Operation){
+                this.emit('ZoneVolumePercentageChange', this.ZonesArray[j].ZoneNumber, j, this.ZonesArray[j].GetVolumePercentage());
+                break;
+              }
             }
           }
 
@@ -949,10 +992,11 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             }
           }
 
-          // Get new actives inputs
+          // Get new active input
           for(let j = 0 ; j < this.ZonesArray.length ; j++){
             if(Response.substring(0, 5) === ('Z' + this.ZonesArray[j].ZoneNumber + 'INP')){
               this.ZonesArray[j].SetActiveInput(Number(Response.substring(5, Response.length)));
+              this.GetZoneARCEnabled(i);
 
               if(this.CurrentState === ControllerState.Operation){
                 this.emit('ZoneInputChange', this.ZonesArray[j].ZoneNumber, j, this.ZonesArray[j].GetActiveInput());
@@ -963,6 +1007,41 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           // Get Config Menu Sate
           if(Response.substring(0, 5) === 'Z1SMD'){
             this.ConfigMenuDisplayVisible = Response[5] === '1';
+          }
+
+          // Get Main Zone ARC Configured
+          if(Response.substring(0, 8) === 'Z1ARCVAL'){
+            const MainZoneARCConfigured = (Response[8] === '1');
+            for(let j = 0 ; j < this.ZonesArray.length ; j++){
+              const Zone = this.ZonesArray[j];
+              if(Zone.GetIsMainZone()){
+                Zone.SetARCConfigured(MainZoneARCConfigured);
+              }
+            }
+
+
+          }
+
+          // Get Main Zone ARC Enabled ProtocolV02
+          for(let j = 0 ; j < this.ZonesArray.length ; j++){
+            if(this.ZonesArray[j].GetIsMainZone() && this.IsProtocolV02()){
+              if(Response.substring(0, 6) === ('IS' + this.ZonesArray[j].GetActiveInput() + 'ARC')){
+                const ARCEnabled = Response[6] === '1';
+                this.ZonesArray[j].SetActiveInputARCEnabled(ARCEnabled);
+                this.emit('ZoneARCEnabledChange', this.ZonesArray[j].ZoneNumber, j, ARCEnabled);
+                break;
+              }
+            }
+          }
+
+          // Get Zone ARC Enabled ProtocolV01
+          for(let j = 0 ; j < this.ZonesArray.length ; j++){
+            if(Response.substring(0, 5) === ('Z' + this.ZonesArray[j].ZoneNumber + 'ARC')){
+              const ARCEnabled = Response[5] === '1';
+              this.ZonesArray[j].SetActiveInputARCEnabled(ARCEnabled);
+              this.emit('ZoneARCEnabledChange', this.ZonesArray[j].ZoneNumber, j, ARCEnabled);
+              break;
+            }
           }
 
           // Error management
