@@ -34,6 +34,7 @@ Homebridge plugin for Anthem Receiver.
 * `Input`: Add Zone Input accessory (Cycle Zone active input)
 * `ARC`: Add Zone1 ARC accessory (Toggle Zone1 ARC status, ARC neends to be configured)
 * `ALM`: Add Zone1 Audio Listenning Mode accessory (Cycle Zone1 Current Audio Mode)
+* `Name`: Zone External Power/Input accessory custom name. Defaults to "Zone1" and "Zone2"
 
 
 ```
@@ -42,6 +43,7 @@ Homebridge plugin for Anthem Receiver.
     "Host": "192.168.1.1",
     "Port": 14999,
     "Zone1": {
+        "Name": "Zone1",
         "Active": true,
         "ARC": true,
         "Power": true,
@@ -51,6 +53,7 @@ Homebridge plugin for Anthem Receiver.
         "ALM": true
     },
     "Zone2": {
+        "Name": "Zone2",
         "Active": true,
         "Power": true,
         "Volume": true,
@@ -79,10 +82,9 @@ Homebridge plugin for Anthem Receiver.
 * CENTER button so select option (Main Zone)
 
 # Releases
-## 0.5.1
+## 0.5.2
 - Adding Volume accessory for Zone1 and Zone2 (Only available for X40 serie receiver)
 - Adding ARC accessory for Zone1
-- Removing Custom Text option for Power/Input accessories. Custom name should be set and changed in Home App
 
 ## 0.5.0
 - Adding Power, Mute and Input accessories for Zone1 and Zone2
