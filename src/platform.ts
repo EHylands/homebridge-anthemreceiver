@@ -305,6 +305,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.Zone2Active = this.config.Zone2.Active;
     }
 
+    if(this.config.Zone1.Name !== undefined){
+      this.Zone1Name = this.config.Zone1.Name;
+    }
+
+    if(this.config.Zone2.Name !== undefined){
+      this.Zone2Name = this.config.Zone2.Name;
+    }
+
     if(this.config.Zone1.Mute !== undefined){
       this.Zone1Mute = this.config.Zone1.Mute;
     }
