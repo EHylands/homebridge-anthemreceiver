@@ -82,6 +82,9 @@ Homebridge plugin for Anthem Receiver.
 * CENTER button so select option (Main Zone)
 
 # Releases
+## 0.5.3
+- Security fix
+
 ## 0.5.2
 - Adding Volume accessory for Zone1 and Zone2 (Only available for X40 serie receiver)
 - Adding ARC accessory for Zone1

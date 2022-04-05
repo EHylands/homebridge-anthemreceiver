@@ -12,6 +12,7 @@ export class AnthemReceiverPowerAccessory {
     private readonly ZoneNumber: number,
   ) {
     this.platform.log.info('Power Accessory: Zone' + ZoneNumber);
+    const ZoneIndex = this.Controller.GetZoneIndex(ZoneNumber);
 
     this.service = this.accessory.getService(this.platform.Service.Switch)
     || this.accessory.addService(this.platform.Service.Switch);
@@ -32,6 +33,9 @@ export class AnthemReceiverPowerAccessory {
         this.HandlePowerEvent(Power);
       }
     });
+
+    // Set initial State
+    this.HandlePowerEvent(this.Controller.GetZonePower(ZoneIndex));
   }
 
   HandlePowerEvent(Power:boolean){

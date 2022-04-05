@@ -917,10 +917,10 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
               if(this.ZonesArray[j].GetIsPowered()){
                 this.UpdateOnZonePower(j);
               }
-            }
 
-            if(this.CurrentState === ControllerState.Operation){
-              this.emit('ZonePowerChange', this.ZonesArray[j].ZoneNumber, j, this.ZonesArray[j].GetIsPowered());
+              if(this.CurrentState === ControllerState.Operation){
+                this.emit('ZonePowerChange', this.ZonesArray[j].ZoneNumber, j, this.ZonesArray[j].GetIsPowered());
+              }
             }
           }
 

@@ -49,15 +49,17 @@ export class AnthemReceiverPowerInputAccessory {
     }
   });
 
-  //this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
-  //  if(this.ZoneIndex === ZoneIndex){
-  //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
-  //  }
-  //});
+  this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
+    if(this.ZoneIndex === ZoneIndex){
+      this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
+    }
+  });
 
-  //this.Controller.on('ZoneVolumePercentageChange', (Zone: number, ZoneIndex: number, VolumePercentage:number)=>{
-  //  //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
-  //});
+  this.Controller.on('ZoneVolumePercentageChange', (Zone: number, ZoneIndex: number, VolumePercentage:number)=>{
+    if(this.ZoneIndex === ZoneIndex){
+      this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
+    }
+  });
 
   this.platform.api.publishExternalAccessories(PLUGIN_NAME, [this.ReceiverAccessory]);
   }
@@ -165,6 +167,10 @@ export class AnthemReceiverPowerInputAccessory {
         }
         callback();
       });
+
+    // Set initial power status
+    TVService.getCharacteristic(this.platform.Characteristic.Active).updateValue(this.Controller.GetZonePower(this.ZoneIndex));
+
     return TVService;
   }
 
@@ -177,12 +183,10 @@ export class AnthemReceiverPowerInputAccessory {
       this.platform.Characteristic.VolumeControlType.ABSOLUTE);
 
     SpeakerService.getCharacteristic(this.platform.Characteristic.Mute)
-      .onGet(this.HandleMuteGet.bind(this))
       .onSet(this.HandleMuteSet.bind(this));
 
-    //SpeakerService.getCharacteristic(this.platform.Characteristic.Volume)
-    //  .on('get', this.HandleVolumeGet.bind(this)) // Not working
-    //  .on('set', this.HandleVolumeSet.bind(this));
+    SpeakerService.getCharacteristic(this.platform.Characteristic.Volume)
+      .onSet(this.HandleVolumeSet.bind(this));
 
     SpeakerService.getCharacteristic(this.platform.Characteristic.VolumeSelector)
       .onSet(this.HandleVolumeSelector.bind(this));
@@ -194,21 +198,10 @@ export class AnthemReceiverPowerInputAccessory {
     return this.ZoneIndex;
   }
 
-  HandleMuteGet() {
-    return this.Controller.GetMute(this.ZoneIndex);
-  }
-
   HandleMuteSet(newValue) {
     if(this.Controller.GetZone(this.ZoneIndex).GetIsPowered()){
       this.Controller.SetMute(this.ZoneIndex, Boolean(newValue));
     }
-  }
-
-  // Not working for the moment.
-  HandleVolumeGet(callback){
-    const VP = this.Controller.GetZone(this.ZoneIndex).GetVolumePercentage();
-    //this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VP);
-    callback(VP);
   }
 
   HandleVolumeSelector(Value){
