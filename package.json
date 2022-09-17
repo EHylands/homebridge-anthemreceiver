@@ -1,7 +1,7 @@
 {
   "displayName": "Anthem Receiver",
   "name": "homebridge-anthemreceiver",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Homebridge integration for Anthem AV receiver.",
   "license": "Apache-2.0",
   "repository": {
