@@ -2,7 +2,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 
-export class AnthemReceiverInputAccessory {
+export class HKInputAccessory {
   private service: Service;
 
   constructor(
@@ -28,8 +28,7 @@ export class AnthemReceiverInputAccessory {
   }
 
   SwitchInput(){
-    const ZoneIndex = this.Controller.GetZoneIndex(this.ZoneNumber);
-    const Zone = this.Controller.GetZone(ZoneIndex);
+    const Zone = this.Controller.GetZones()[this.ZoneNumber];
 
     setTimeout(() => {
       this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
@@ -37,7 +36,7 @@ export class AnthemReceiverInputAccessory {
 
     // Input can only be changed set on a powered zone
     if(Zone.GetIsPowered()){
-      this.Controller.SwitchInput(ZoneIndex);
+      this.Controller.SwitchInput(this.ZoneNumber);
     } else{
       this.platform.log.error('Zone' + this.ZoneNumber +': Cannot switch input, zone is not powered on');
 

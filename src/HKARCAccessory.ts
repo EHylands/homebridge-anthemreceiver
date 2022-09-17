@@ -2,7 +2,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 
-export class AnthemReceiverARCAccessory {
+export class HKARCAccessory {
   private service: Service;
 
   constructor(
@@ -26,13 +26,13 @@ export class AnthemReceiverARCAccessory {
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.SwitchARC.bind(this));
 
-    this.Controller.on('ZoneARCEnabledChange', (Zone: number, ZoneIndex: number, ARCEnabled:boolean)=>{
+    this.Controller.on('ZoneARCEnabledChange', (Zone: number, ARCEnabled:boolean)=>{
       if(this.ZoneNumber === Zone){
         this.HandleARCEvent(ARCEnabled);
       }
     });
 
-    this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power:boolean) => {
+    this.Controller.on('ZonePowerChange', (Zone: number, Power:boolean) => {
       if(this.ZoneNumber === Zone && !Power){
         this.HandleARCEvent(false);
       }
@@ -44,8 +44,7 @@ export class AnthemReceiverARCAccessory {
   }
 
   SwitchARC(Value){
-    const ZoneIndex = this.Controller.GetZoneIndex(this.ZoneNumber);
-    const Zone = this.Controller.GetZone(ZoneIndex);
+    const Zone = this.Controller.GetZones()[this.ZoneNumber];
 
     if(!Zone.GetIsPowered()){
       this.platform.log.error('Zone' + this.ZoneNumber +': Cannot toggle ARC, zone is not powered on');
@@ -72,6 +71,6 @@ export class AnthemReceiverARCAccessory {
 
     }
 
-    this.Controller.SetZoneARCEnabled(ZoneIndex, Value);
+    this.Controller.SetZoneARCEnabled(this.ZoneNumber, Value);
   }
 }

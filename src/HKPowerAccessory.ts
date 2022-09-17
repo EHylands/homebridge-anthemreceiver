@@ -2,7 +2,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 
-export class AnthemReceiverPowerAccessory {
+export class HKPowerAccessory {
   private service: Service;
 
   constructor(
@@ -12,7 +12,6 @@ export class AnthemReceiverPowerAccessory {
     private readonly ZoneNumber: number,
   ) {
     this.platform.log.info('Power Accessory: Zone' + ZoneNumber);
-    const ZoneIndex = this.Controller.GetZoneIndex(ZoneNumber);
 
     this.service = this.accessory.getService(this.platform.Service.Switch)
     || this.accessory.addService(this.platform.Service.Switch);
@@ -28,14 +27,14 @@ export class AnthemReceiverPowerAccessory {
       .onSet(this.SetPower.bind(this));
 
     // Handle ZonePowerChange event from controller
-    this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power:boolean) => {
+    this.Controller.on('ZonePowerChange', (Zone: number, Power:boolean) => {
       if(this.ZoneNumber === Zone){
         this.HandlePowerEvent(Power);
       }
     });
 
     // Set initial State
-    this.HandlePowerEvent(this.Controller.GetZonePower(ZoneIndex));
+    this.HandlePowerEvent(this.Controller.GetZonePower(ZoneNumber));
   }
 
   HandlePowerEvent(Power:boolean){
@@ -43,7 +42,6 @@ export class AnthemReceiverPowerAccessory {
   }
 
   SetPower(value){
-    const ZoneIndex = this.Controller.GetZoneIndex(this.ZoneNumber);
-    this.Controller.PowerZone(ZoneIndex, value);
+    this.Controller.PowerZone(this.ZoneNumber, value);
   }
 }

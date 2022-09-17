@@ -1,7 +1,7 @@
 {
   "pluginAlias": "AnthemReceiver",
   "pluginType": "platform",
-  "singular": false,
+  "singular": true,
   "schema": {
     "type": "object",
     "properties": {
@@ -16,52 +16,57 @@
         "required": true,
         "default" : 14999
       },
+      "PanelBrightness":{
+        "title": "Panel Brightness",
+        "type": "boolean",
+        "default": true,
+        "required": true
+      },
       "Zone1":{
         "title": "Zone 1",
         "type": "object",
         "properties":{
           "Active":{
-            "title": "Power/Input Accessory (HomeKit external television accessory)",
+            "title": "Enable Zone 1 Power/Input",
             "type": "boolean",
             "default": true
           },
           "Name": {
-            "title": "Custom Text",
+            "title": "Name:",
             "type": "string",
             "required": false,
-            "placeholder": "Zone 1",
-            "description": "This accessory needs to be manually added in Home App"
+            "placeholder": "Zone 1"
           },
           "Power": {
-            "title": "Power Accessory",
+            "title": "Power",
             "type": "boolean",
             "default": true
           },
           "Mute": {
-            "title": "Mute Accessory",
+            "title": "Mute",
             "type": "boolean",
             "default": true
           },
           "Input": {
-            "title": "Input Accessory - (Cycle current active input)",
+            "title": "Input - (Cycle current active input)",
             "type": "boolean",
             "default": true
           },
           "ALM": {
-            "title": "Audio Listenning Mode Accessory - (Cycle active input current audio mode)",
+            "title": "Audio Listenning Mode - (Cycle active input current audio mode)",
             "type": "boolean",
             "default": true,
             "description": ""
           },
           "ARC": {
-            "title": "ARC Accessory - (Toggle ARC status for active input, ARC must be configured)",
+            "title": "ARC - (Toggle ARC status for active input, ARC must be configured)",
             "type": "boolean",
             "default": true
           },
           "Volume": {
-            "title": "Volume Accessory - (Displayed as a light dimmer accessory)",
+            "title": "Volume",
             "type": "boolean",
-            "default": false
+            "default": true
           }
         }
       },
@@ -70,39 +75,110 @@
         "type": "object",
         "properties":{
           "Active":{
-            "title": "Power/Input Accessory (HomeKit external television accessory)",
+            "title": "Enable Zone 2 Power/Input",
             "type": "boolean",
-            "default": true
+            "default": false
           },
           "Name": {
-            "title": "Custom Text",
+            "title": "Name:",
             "type": "string",
             "required": false,
-            "placeholder": "Zone 2",
-            "description": "This accessory needs to be manually added in Home App"
+            "placeholder": "Zone 2"
           },
           "Power": {
-            "title": "Power Accessory",
+            "title": "Power",
             "type": "boolean",
-            "default": true
+            "default": false
           },
           "Mute": {
-            "title": "Mute Accessory",
+            "title": "Mute",
             "type": "boolean",
-            "default": true
+            "default": false
           },
           "Input": {
-            "title": "Input Accessory - (Cycle current active input)",
+            "title": "Input - (Cycle current active input)",
             "type": "boolean",
-            "default": true
+            "default": false
           },
           "Volume": {
-            "title": "Volume Accessory - (Displayed as a light dimmer accessory)",
+            "title": "Volume",
             "type": "boolean",
             "default": false
           }
         }
       }     
     }
-  }
+  },
+  "layout": [
+    {
+      "title": "<h4><b>Anthem Receiver Plugin Configuration</b></h4>",
+      "type": "flex",
+      "flex-flow": "column wrap",
+      "items":[
+        {
+          "type": "help",
+          "helpvalue": "<em class='primary-text'> Please read: </em> <a href='https://github.com/EHylands/homebridge-anthemreceiver'> Homebridge-AnthemReceiver</a>"
+        },
+        {
+          "type": "flex",
+          "flex-flow": "row wrap",
+          "items": [
+            "Host",
+            "Port"
+          ]
+        },
+        "PanelBrightness"
+      ]
+    },
+    {
+      "title": "<h4><b>Zone 1 - Platform Accessories</b></h4>",
+      "type": "flex",
+      "flex-flow": "column wrap",
+      "items": [
+        "Zone1.Power",
+        "Zone1.Mute",
+        "Zone1.Volume",
+        "Zone1.Input",
+        "Zone1.ALM",
+        "Zone1.ARC"
+      ]
+    },
+    {
+      "title": "<h4><b>Zone 1 - Power/Input Accessory</b></h4>",
+      "type": "flex",
+      "flex-flow": "column wrap",
+      "items": [
+        {
+          "type": "help",
+          "helpvalue": "<em class='primary-text'>External HomeKit Televison Accessory to be manually added in Home App</em>"
+        },
+        "Zone1.Active",
+        "Zone1.Name"
+      ]
+    },
+    {
+      "title": "<h4><b>Zone 2 - Platform Accessories</b></h4>",
+      "type": "array",
+      "flex-flow": "column wrap",
+      "items": [
+        "Zone2.Power",
+        "Zone2.Mute",
+        "Zone2.Volume",
+        "Zone2.Input"
+      ]
+    },
+    {
+      "title": "<h4><b>Zone 2 - Power/Input Accessory</b></h4>",
+      "type": "flex",
+      "flex-flow": "column wrap",
+      "items": [
+        {
+          "type": "help",
+          "helpvalue": "<em class='primary-text'>External HomeKit Televison Accessory to be manually added in Home App</em>"
+        },
+        "Zone2.Active",
+        "Zone2.Name"
+      ]
+    }
+  ]
 }

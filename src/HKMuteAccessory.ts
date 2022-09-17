@@ -2,7 +2,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 
-export class AnthemReceiverMuteAccessory {
+export class HKMuteAccessory {
   private service: Service;
 
   constructor(
@@ -27,7 +27,7 @@ export class AnthemReceiverMuteAccessory {
       .onSet(this.SetMute.bind(this));
 
     // Handle ZoneMutedChange event from controller
-    this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
+    this.Controller.on('ZoneMutedChange', (Zone: number, Muted:boolean) => {
       if(this.ZoneNumber === Zone){
         this.HandleMuteEvent(Muted);
       }
@@ -35,9 +35,10 @@ export class AnthemReceiverMuteAccessory {
 
     // Handle ZonePowerChange event from controller
     // Disable mute accessory when zone is powered off
-    this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power:boolean) => {
+    this.Controller.on('ZonePowerChange', (Zone: number, Power:boolean) => {
       if(this.ZoneNumber === Zone && !Power){
         this.HandleMuteEvent(false);
+        // insert timer ....
       }
     });
   }
@@ -47,11 +48,10 @@ export class AnthemReceiverMuteAccessory {
   }
 
   SetMute(value){
-    const ZoneIndex = this.Controller.GetZoneIndex(this.ZoneNumber);
 
     // Mute can only be set on a powered zone
-    if(this.Controller.GetZonePower(ZoneIndex)){
-      this.Controller.SetMute(ZoneIndex, value);
+    if(this.Controller.GetZonePower(this.ZoneNumber)){
+      this.Controller.SetMute(this.ZoneNumber, value);
     } else{
       this.platform.log.error('Zone' + this.ZoneNumber +': Cannot set mute, zone is not powered on');
       setTimeout(() => {

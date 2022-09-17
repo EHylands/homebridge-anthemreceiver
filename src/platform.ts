@@ -1,11 +1,12 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
-import { AnthemReceiverPowerInputAccessory } from './AnthemReceiverPowerInputAccessory';
-import { AnthemReceiverMuteAccessory } from './AnthemReceiverMuteAccessory';
-import { AnthemReceiverPowerAccessory } from './AnthemReceiverPowerAccessory';
-import { AnthemReceiverInputAccessory } from './AnthemReceiverInputAccessory';
-import { AnthemReceiverALMAccessory } from './AnthemReceiverALMAccessory';
-import { AnthemReceiverARCAccessory } from './AnthemReceiverARCAccessory';
-import { AnthemReceiverVolumeAccessory } from './AnthemReceiverVolumeAccessory';
+import { HKPowerInputAccessory } from './HKPowerInputAccessory';
+import { HKMuteAccessory } from './HKMuteAccessory';
+import { HKPowerAccessory } from './HKPowerAccessory';
+import { HKInputAccessory } from './HKInputAccessory';
+import { HKALMAccessory } from './HKALMAccessory';
+import { HKARCAccessory } from './HKARCAccessory';
+import { HKVolumeAccessory } from './HKVolumeAccessory';
+import { HKBrightnessAccessory } from './HKBrightnessAccessory';
 import { AnthemController, AnthemControllerError } from './AnthemController';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 
@@ -32,13 +33,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Zone1ARC = false;
   private Zone1Volume = false;
   private Zone2Volume = false;
+  private PanelBrightness = false;
 
   private Port = '14999';
   private ReconnectTimeout = 30000;
   private InitialRun = true;
   private IsRunning = false;
 
-  private AnthemReceiverPowerInputArray: AnthemReceiverPowerInputAccessory[];
+  private AnthemReceiverPowerInputArray: HKPowerInputAccessory[];
 
   constructor(
     public readonly log: Logger,
@@ -126,13 +128,13 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     const Inputs = this.Controller.GetInputs();
 
     if(this.Zone1Active){
-      const AnthemReceiver = new AnthemReceiverPowerInputAccessory(this, this.Controller, 1);
+      const AnthemReceiver = new HKPowerInputAccessory(this, this.Controller, 1);
       this.AnthemReceiverPowerInputArray.push(AnthemReceiver);
       AnthemReceiver.SetInputs(Inputs);
     }
 
     if(this.Zone2Active){
-      const AnthemReceiver2 = new AnthemReceiverPowerInputAccessory(this, this.Controller, 2);
+      const AnthemReceiver2 = new HKPowerInputAccessory(this, this.Controller, 2);
       this.AnthemReceiverPowerInputArray.push(AnthemReceiver2);
       AnthemReceiver2.SetInputs(Inputs);
     }
@@ -142,6 +144,10 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       for(let i = 0 ; i < Inputs.length ; i ++){
         this.log.info(' -Input' + (i + 1) + ': ' + Inputs[i]);
       }
+    }
+
+    if(this.PanelBrightness){
+      this.AddBrightnessAccessory();
     }
 
     if(this.Zone1Mute){
@@ -197,12 +203,12 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Volume');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
-      new AnthemReceiverVolumeAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      new HKVolumeAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Volume', uuid);
       this.CreatedAccessories.push(accessory);
-      new AnthemReceiverVolumeAccessory(this, accessory, this.Controller, ZoneNumber);
+      new HKVolumeAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
     }
@@ -212,12 +218,12 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'ARC');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
-      new AnthemReceiverARCAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      new HKARCAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ARC', uuid);
       this.CreatedAccessories.push(accessory);
-      new AnthemReceiverARCAccessory(this, accessory, this.Controller, ZoneNumber);
+      new HKARCAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
     }
@@ -227,12 +233,12 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'ALM Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
-      new AnthemReceiverALMAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      new HKALMAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ALM', uuid);
       this.CreatedAccessories.push(accessory);
-      new AnthemReceiverALMAccessory(this, accessory, this.Controller, ZoneNumber);
+      new HKALMAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
     }
@@ -242,12 +248,12 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Mute Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
-      new AnthemReceiverMuteAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      new HKMuteAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Mute', uuid);
       this.CreatedAccessories.push(accessory);
-      new AnthemReceiverMuteAccessory(this, accessory, this.Controller, ZoneNumber);
+      new HKMuteAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
     }
@@ -257,12 +263,12 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Power Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
-      new AnthemReceiverPowerAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      new HKPowerAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Power', uuid);
       this.CreatedAccessories.push(accessory);
-      new AnthemReceiverPowerAccessory(this, accessory, this.Controller, ZoneNumber);
+      new HKPowerAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
     }
@@ -272,12 +278,26 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Input Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
-      new AnthemReceiverInputAccessory(this, existingAccessory, this.Controller, ZoneNumber);
+      new HKInputAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Input', uuid);
       this.CreatedAccessories.push(accessory);
-      new AnthemReceiverInputAccessory(this, accessory, this.Controller, ZoneNumber);
+      new HKInputAccessory(this, accessory, this.Controller, ZoneNumber);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.CreatedAccessories.push(accessory);
+    }
+  }
+
+  AddBrightnessAccessory(){
+    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + 'Brightness Accessory');
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+    if (existingAccessory) {
+      new HKBrightnessAccessory(this, existingAccessory, this.Controller);
+      this.CreatedAccessories.push(existingAccessory);
+    } else{
+      const accessory = new this.api.platformAccessory('Panel', uuid);
+      new HKBrightnessAccessory(this, accessory, this.Controller);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
     }
@@ -353,6 +373,10 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.Zone2Volume = this.config.Zone2.Volume;
     }
 
+    if(this.config.PanelBrightness !== undefined){
+      this.PanelBrightness = this.config.PanelBrightness;
+    }
+
     return true;
   }
 
@@ -365,8 +389,9 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.info('Software Version: ' + this.Controller.SoftwareVersion);
 
     this.log.info('Controlling ' + this.Controller.GetConfiguredZoneNumber() +' Zones');
-    for(let i = 0 ; i < this.Controller.GetConfiguredZoneNumber() ; i++ ){
-      this.log.info(' ' + (i+1) + ': ' + this.Controller.GetZoneName(i));
+    for(const ZoneNumber in this.Controller.GetZones()){
+      const Zone = this.Controller.GetZones()[ZoneNumber];
+      this.log.info(' Zone:' + ZoneNumber + ': ' + Zone.ZoneName);
     }
   }
 

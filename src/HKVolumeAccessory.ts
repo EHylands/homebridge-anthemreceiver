@@ -2,7 +2,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 
-export class AnthemReceiverVolumeAccessory {
+export class HKVolumeAccessory {
   private service: Service;
 
   constructor(
@@ -30,14 +30,14 @@ export class AnthemReceiverVolumeAccessory {
       .onSet(this.SetBrightness.bind(this));
 
     // Hande ZoneVolumePercentageChange event from controller
-    this.Controller.on('ZoneVolumePercentageChange', (Zone:number, ZoneIndex:number, VolumePercentage:number)=> {
+    this.Controller.on('ZoneVolumePercentageChange', (Zone:number, VolumePercentage:number)=> {
       if(this.ZoneNumber === Zone){
         this.service.getCharacteristic(this.platform.Characteristic.Brightness).updateValue(VolumePercentage);
       }
     });
 
     // Handle ZoneMutedChange event from controller
-    this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
+    this.Controller.on('ZoneMutedChange', (Zone: number, Muted:boolean) => {
       if(this.ZoneNumber === Zone){
         this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(!Muted);
       }
@@ -45,7 +45,7 @@ export class AnthemReceiverVolumeAccessory {
 
     // Handle ZonePowerChange event from controller
     // Disable mute accessory when zone is powered off
-    this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power:boolean) => {
+    this.Controller.on('ZonePowerChange', (Zone: number, Power:boolean) => {
       if(this.ZoneNumber === Zone){
         this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(Power);
       }
@@ -53,12 +53,11 @@ export class AnthemReceiverVolumeAccessory {
   }
 
   SetBrightness(value){
-    const ZoneIndex = this.Controller.GetZoneIndex(this.ZoneNumber);
-    const CurrentVolumePercentage = this.Controller.GetZone(ZoneIndex).GetVolumePercentage();
+    const CurrentVolumePercentage = this.Controller.GetZone(this.ZoneNumber).GetVolumePercentage();
 
     // Brightness can only be set on a powered zone
-    if(this.Controller.GetZonePower(ZoneIndex)){
-      this.Controller.SetZoneVolumePercentage(ZoneIndex, value);
+    if(this.Controller.GetZonePower(this.ZoneNumber)){
+      this.Controller.SetZoneVolumePercentage(this.ZoneNumber, value);
     } else{
       this.platform.log.error('Zone' + this.ZoneNumber +': Cannot set volume percentage, zone is not powered on');
       setTimeout(() => {
@@ -68,11 +67,10 @@ export class AnthemReceiverVolumeAccessory {
   }
 
   SetMute(value){
-    const ZoneIndex = this.Controller.GetZoneIndex(this.ZoneNumber);
 
     // Mute can only be set on a powered zone
-    if(this.Controller.GetZonePower(ZoneIndex)){
-      this.Controller.SetMute(ZoneIndex, !value);
+    if(this.Controller.GetZonePower(this.ZoneNumber)){
+      this.Controller.SetMute(this.ZoneNumber, !value);
     } else{
       this.platform.log.error('Zone' + this.ZoneNumber +': Cannot set mute, zone is not powered on');
       setTimeout(() => {

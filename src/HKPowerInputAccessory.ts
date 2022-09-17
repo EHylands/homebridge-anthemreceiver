@@ -3,12 +3,11 @@ import { AnthemController, AnthemKeyCode } from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 import { PLUGIN_NAME } from './settings';
 
-export class AnthemReceiverPowerInputAccessory {
+export class HKPowerInputAccessory {
   private ReceiverAccessory: PlatformAccessory;
   private TVService: Service;
   private SpeakerService: Service;
   private HdmiInputService: Service[];
-  private ZoneIndex;
 
   constructor(
     private readonly platform: AnthemReceiverHomebridgePlatform,
@@ -16,13 +15,12 @@ export class AnthemReceiverPowerInputAccessory {
     private readonly ZoneNumber: number,
   ) {
 
-    this.ZoneIndex = this.Controller.GetZoneIndex(ZoneNumber);
-    const Name = this.Controller.GetZoneName(this.ZoneIndex);
+    const Name = this.Controller.GetZoneName(this.ZoneNumber);
     this.HdmiInputService = [];
 
-    this.platform.log.info('Power/Input Accessory: Zone' + this.Controller.GetZoneNumber(this.ZoneIndex));
+    this.platform.log.info('Power/Input Accessory: Zone' + ZoneNumber);
 
-    const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
+    const uuid = this.platform.api.hap.uuid.generate('testAnthem_Receiver' + this.Controller.ReceiverModel +
     this.Controller.SerialNumber + ZoneNumber);
     this.ReceiverAccessory = new this.platform.api.platformAccessory(Name, uuid);
     this.ReceiverAccessory.category = this.platform.api.hap.Categories.TELEVISION;
@@ -37,26 +35,26 @@ export class AnthemReceiverPowerInputAccessory {
   this.TVService = this.ConfigureTelevisionservice();
   this.SpeakerService = this.ConfigureTelevisionSpeakerService();
 
-  this.Controller.on('ZonePowerChange', (Zone: number, ZoneIndex: number, Power: boolean) => {
-    if(this.ZoneIndex === ZoneIndex){
+  this.Controller.on('ZonePowerChange', (Zone: number, Power: boolean) => {
+    if(this.ZoneNumber === Zone){
       this.TVService.updateCharacteristic(this.platform.Characteristic.Active, Power);
     }
   });
 
-  this.Controller.on('ZoneInputChange', (Zone: number, ZoneIndex: number, Input: number) => {
-    if(this.ZoneIndex === ZoneIndex){
+  this.Controller.on('ZoneInputChange', (Zone: number, Input: number) => {
+    if(this.ZoneNumber === Zone){
       this.TVService.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, Input);
     }
   });
 
-  this.Controller.on('ZoneMutedChange', (Zone: number, ZoneIndex: number, Muted:boolean) => {
-    if(this.ZoneIndex === ZoneIndex){
+  this.Controller.on('ZoneMutedChange', (Zone: number, Muted:boolean) => {
+    if(this.ZoneNumber === Zone){
       this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Mute, Muted);
     }
   });
 
-  this.Controller.on('ZoneVolumePercentageChange', (Zone: number, ZoneIndex: number, VolumePercentage:number)=>{
-    if(this.ZoneIndex === ZoneIndex){
+  this.Controller.on('ZoneVolumePercentageChange', (Zone: number, VolumePercentage:number)=>{
+    if(this.ZoneNumber === Zone){
       this.SpeakerService.updateCharacteristic(this.platform.Characteristic.Volume, VolumePercentage);
     }
   });
@@ -83,7 +81,7 @@ export class AnthemReceiverPowerInputAccessory {
   }
 
   ConfigureTelevisionservice():Service{
-    const Name = this.Controller.GetZoneName(this.ZoneIndex);
+    const Name = this.Controller.GetZoneName(this.ZoneNumber);
     const TVService = this.ReceiverAccessory.addService(this.platform.Service.Television);
     TVService.setCharacteristic(this.platform.Characteristic.ConfiguredName, Name);
     TVService.setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode,
@@ -92,20 +90,20 @@ export class AnthemReceiverPowerInputAccessory {
     // Send change from homekit to Anthem Receiver - Power
     TVService.getCharacteristic(this.platform.Characteristic.Active)
       .onSet((newValue) => {
-        this.Controller.PowerZone(this.ZoneIndex, newValue === 1);
+        this.Controller.PowerZone(this.ZoneNumber, newValue === 1);
       });
 
     // Send change from homekit to Anthem Receiver - Active input
     TVService.getCharacteristic(this.platform.Characteristic.ActiveIdentifier)
       .onSet((newValue) => {
-        this.Controller.SetZoneInput(this.ZoneIndex, Number(newValue));
+        this.Controller.SetZoneInput(this.ZoneNumber, Number(newValue));
       });
 
     TVService
       .getCharacteristic(this.platform.Characteristic.RemoteKey)
       .on('set', async (newValue, callback) => {
-        if(!this.Controller.GetZone(this.ZoneIndex).GetIsPowered()){
-          this.Controller.PowerZone(this.ZoneIndex, true);
+        if(!this.Controller.GetZones()[this.ZoneNumber].GetIsPowered()){
+          this.Controller.PowerZone(this.ZoneNumber, true);
           callback();
           return;
         }
@@ -113,53 +111,53 @@ export class AnthemReceiverPowerInputAccessory {
         switch (newValue) {
           case this.platform.Characteristic.RemoteKey.ARROW_UP: {
             if(this.Controller.GetIsMenuDisplayVisible()){
-              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.UP);
+              this.Controller.SendKey(this.ZoneNumber, AnthemKeyCode.UP);
             } else{
-              this.Controller.VolumeUp(this.ZoneIndex);
+              this.Controller.VolumeUp(this.ZoneNumber);
             }
 
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_DOWN: {
             if(this.Controller.GetIsMenuDisplayVisible()){
-              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.DOWN);
+              this.Controller.SendKey(this.ZoneNumber, AnthemKeyCode.DOWN);
             } else {
-              this.Controller.VolumeDown(this.ZoneIndex);
+              this.Controller.VolumeDown(this.ZoneNumber);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_LEFT: {
-            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
-              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.LEFT);
+            if(this.Controller.GetZones()[this.ZoneNumber].GetIsMainZone()){
+              this.Controller.SendKey(this.ZoneNumber, AnthemKeyCode.LEFT);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.ARROW_RIGHT: {
-            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
-              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.RIGHT);
+            if(this.Controller.GetZones()[this.ZoneNumber].GetIsMainZone()){
+              this.Controller.SendKey(this.ZoneNumber, AnthemKeyCode.RIGHT);
             }
             break;
           }
           case this.platform.Characteristic.RemoteKey.SELECT: {
-            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
-              this.Controller.SendKey(this.ZoneIndex, AnthemKeyCode.SELECT);
+            if(this.Controller.GetZones()[this.ZoneNumber].GetIsMainZone()){
+              this.Controller.SendKey(this.ZoneNumber, AnthemKeyCode.SELECT);
             }
             break;
           }
 
           case this.platform.Characteristic.RemoteKey.BACK: {
-            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
-              this.Controller.ToggleAudioListeningMode(this.ZoneIndex, true);
+            if(this.Controller.GetZones()[this.ZoneNumber].GetIsMainZone()){
+              this.Controller.ToggleAudioListeningMode(this.ZoneNumber, true);
             }
             break;
           }
 
           case this.platform.Characteristic.RemoteKey.PLAY_PAUSE: {
-            this.Controller.ToggleMute(this.ZoneIndex);
+            this.Controller.ToggleMute(this.ZoneNumber);
             break;
           }
           case this.platform.Characteristic.RemoteKey.INFORMATION: {
-            if(this.Controller.GetZone(this.ZoneIndex).GetIsMainZone()){
+            if(this.Controller.GetZones()[this.ZoneNumber].GetIsMainZone()){
               this.Controller.ToggleConfigMenu();
             }
             break;
@@ -169,13 +167,13 @@ export class AnthemReceiverPowerInputAccessory {
       });
 
     // Set initial power status
-    TVService.getCharacteristic(this.platform.Characteristic.Active).updateValue(this.Controller.GetZonePower(this.ZoneIndex));
+    TVService.getCharacteristic(this.platform.Characteristic.Active).updateValue(this.Controller.GetZonePower(this.ZoneNumber));
 
     return TVService;
   }
 
   ConfigureTelevisionSpeakerService():Service{
-    const Name = this.Controller.GetZoneName(this.ZoneIndex);
+    const Name = this.Controller.GetZoneName(this.ZoneNumber);
     const SpeakerService = this.ReceiverAccessory.addService(this.platform.Service.TelevisionSpeaker);
     SpeakerService.setCharacteristic(this.platform.Characteristic.Active, this.platform.Characteristic.Active.ACTIVE);
     SpeakerService.setCharacteristic(this.platform.Characteristic.Name, Name);
@@ -194,34 +192,30 @@ export class AnthemReceiverPowerInputAccessory {
     return SpeakerService;
   }
 
-  GetZoneIndex(){
-    return this.ZoneIndex;
-  }
-
   HandleMuteSet(newValue) {
-    if(this.Controller.GetZone(this.ZoneIndex).GetIsPowered()){
-      this.Controller.SetMute(this.ZoneIndex, Boolean(newValue));
+    if(this.Controller.GetZone(this.ZoneNumber).GetIsPowered()){
+      this.Controller.SetMute(this.ZoneNumber, Boolean(newValue));
     }
   }
 
   HandleVolumeSelector(Value){
-    if(!this.Controller.GetZone(this.ZoneIndex).GetIsPowered()){
-      this.Controller.PowerZone(this.ZoneIndex, true);
+    if(!this.Controller.GetZone(this.ZoneNumber).GetIsPowered()){
+      this.Controller.PowerZone(this.ZoneNumber, true);
       return;
     }
 
     switch (Value) {
       case this.platform.Characteristic.VolumeSelector.INCREMENT: // Volume up
-        this.Controller.VolumeUp(this.ZoneIndex);
+        this.Controller.VolumeUp(this.ZoneNumber);
         break;
       case this.platform.Characteristic.VolumeSelector.DECREMENT: // Volume down
-        this.Controller.VolumeDown(this.ZoneIndex);
+        this.Controller.VolumeDown(this.ZoneNumber);
         break;
     }
   }
 
   HandleVolumeSet(newValue, callback){
-    this.Controller.SetZoneVolumePercentage(this.ZoneIndex, newValue);
+    this.Controller.SetZoneVolumePercentage(this.ZoneNumber, newValue);
     callback();
   }
 }

@@ -2,7 +2,7 @@ import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 
-export class AnthemReceiverALMAccessory {
+export class HKALMAccessory {
   private service: Service;
 
   constructor(
@@ -28,8 +28,7 @@ export class AnthemReceiverALMAccessory {
   }
 
   SwitchALM(){
-    const ZoneIndex = this.Controller.GetZoneIndex(this.ZoneNumber);
-    const Zone = this.Controller.GetZone(ZoneIndex);
+    const Zone = this.Controller.GetZones()[this.ZoneNumber];
 
     setTimeout(() => {
       this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
@@ -37,7 +36,7 @@ export class AnthemReceiverALMAccessory {
 
     if(Zone.GetIsPowered()){
       if(Zone.GetIsMainZone()){
-        this.Controller.ToggleAudioListeningMode(ZoneIndex, true);
+        this.Controller.ToggleAudioListeningMode(this.ZoneNumber, true);
       } else{
         this.platform.log.error('Zone' + this.ZoneNumber +': Cannot toggle audio listenning mode, not main zone');
       }
