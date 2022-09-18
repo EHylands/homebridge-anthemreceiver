@@ -111,7 +111,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   private DeviceCacheCleanUp(){
-    // Do some cleanup of point that have been restored and are not in config file anymore
+    // Do some cleanup of accessories that have been restored and are not in config file anymore
     for(let i = 0; i< this.accessories.length;i++){
       if(this.CreatedAccessories.indexOf(this.accessories[i]) === -1){
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [this.accessories[i]]);
@@ -207,7 +207,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Volume', uuid);
-      this.CreatedAccessories.push(accessory);
       new HKVolumeAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
@@ -222,7 +221,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ARC', uuid);
-      this.CreatedAccessories.push(accessory);
       new HKARCAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
@@ -236,8 +234,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       new HKALMAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
-      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ALM', uuid);
-      this.CreatedAccessories.push(accessory);
+      const accessory = new this.api.platformAccessory(ZoneNumber + ' ALM', uuid);
       new HKALMAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
@@ -252,7 +249,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Mute', uuid);
-      this.CreatedAccessories.push(accessory);
       new HKMuteAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
@@ -267,7 +263,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Power', uuid);
-      this.CreatedAccessories.push(accessory);
       new HKPowerAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
@@ -282,7 +277,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.CreatedAccessories.push(existingAccessory);
     } else{
       const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Input', uuid);
-      this.CreatedAccessories.push(accessory);
       new HKInputAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
@@ -290,13 +284,19 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   AddBrightnessAccessory(){
+
+    if(!this.Controller.IsProtocolV02()){
+      this.log.error('Panel Brightness Accessory: Not adding accessory (only supported on X40 Serie)');
+      return;
+    }
+
     const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + 'Brightness Accessory');
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     if (existingAccessory) {
       new HKBrightnessAccessory(this, existingAccessory, this.Controller);
       this.CreatedAccessories.push(existingAccessory);
     } else{
-      const accessory = new this.api.platformAccessory('Panel', uuid);
+      const accessory = new this.api.platformAccessory('Front Panel', uuid);
       new HKBrightnessAccessory(this, accessory, this.Controller);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);

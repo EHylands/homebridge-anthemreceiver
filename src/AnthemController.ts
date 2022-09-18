@@ -185,7 +185,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     private InputNameArrayOld:string[] = []; // Used to check for any changes when inputs name are refreshed
     private Zones:Record<number, AnthemZone> = {};
     private ConfigMenuDisplayVisible = false;
-    private PanelBrightness = 0;
+    PanelBrightness = 0;
     private SocketTimeout = 300000; // 5 minutes
 
     SerialNumber = '';
@@ -250,10 +250,6 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       return true;
     }
 
-    //GetZone2(ZoneNumber: number):AnthemZone{
-    //  return this.Zones[ZoneNumber];
-    //}
-
     GetZones(){
       return this.Zones;
     }
@@ -261,10 +257,6 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     GetZone(ZoneNumber:number){
       return this.Zones[ZoneNumber];
     }
-
-    //GetZoneNumber(ZoneIndex: number):number{
-    //  return this.ZonesArray[ZoneIndex].ZoneNumber;
-    //}
 
     GetIsMenuDisplayVisible(){
       return this.ConfigMenuDisplayVisible;
@@ -1028,7 +1020,10 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             const Zone = this.Zones[ZoneNumber];
             if(Response.substring(0, 5) === ('Z' + ZoneNumber + 'INP')){
               Zone.SetActiveInput(Number(Response.substring(5, Response.length)));
-              this.GetZoneARCEnabled(Number(ZoneNumber));
+
+              if(Zone.GetIsMainZone()){
+                this.GetZoneARCEnabled(Number(ZoneNumber));
+              }
 
               if(this.CurrentState === ControllerState.Operation){
                 this.emit('ZoneInputChange', Number(ZoneNumber), Zone.GetActiveInput());

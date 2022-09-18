@@ -14,10 +14,11 @@
         "title":"Port",
         "type": "integer",
         "required": true,
-        "default" : 14999
+        "default" : 14999,
+        "maximum": 65535
       },
       "PanelBrightness":{
-        "title": "Panel Brightness",
+        "title": "Front Panel Brightness",
         "type": "boolean",
         "default": true,
         "required": true
@@ -111,9 +112,9 @@
   },
   "layout": [
     {
-      "title": "<h4><b>Anthem Receiver Plugin Configuration</b></h4>",
-      "type": "flex",
-      "flex-flow": "column wrap",
+      "title": "Anthem Receiver Plugin Configuration",
+      "type": "fieldset",
+      "expandable": false,
       "items":[
         {
           "type": "help",
@@ -131,9 +132,10 @@
       ]
     },
     {
-      "title": "<h4><b>Zone 1 - Platform Accessories</b></h4>",
-      "type": "flex",
-      "flex-flow": "column wrap",
+      "title": "Zone 1 - Platform Accessories",
+      "type": "fieldset",
+      "expandable": true,
+      "expanded": true,
       "items": [
         "Zone1.Power",
         "Zone1.Mute",
@@ -144,9 +146,10 @@
       ]
     },
     {
-      "title": "<h4><b>Zone 1 - Power/Input Accessory</b></h4>",
-      "type": "flex",
-      "flex-flow": "column wrap",
+      "title": "Zone 1 - Power/Input Accessory",
+      "type": "fieldset",
+      "expandable": true,
+      "expanded": true,
       "items": [
         {
           "type": "help",
@@ -157,9 +160,9 @@
       ]
     },
     {
-      "title": "<h4><b>Zone 2 - Platform Accessories</b></h4>",
-      "type": "array",
-      "flex-flow": "column wrap",
+      "title": "Zone 2 - Platform Accessories",
+      "type": "fieldset",
+      "expandable": true,
       "items": [
         "Zone2.Power",
         "Zone2.Mute",
@@ -168,9 +171,9 @@
       ]
     },
     {
-      "title": "<h4><b>Zone 2 - Power/Input Accessory</b></h4>",
-      "type": "flex",
-      "flex-flow": "column wrap",
+      "title": "Zone 2 - Power/Input Accessory>",
+      "type": "fieldset",
+      "expandable": true,
       "items": [
         {
           "type": "help",

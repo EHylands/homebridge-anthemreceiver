@@ -28,14 +28,14 @@ Homebridge plugin for Anthem Receiver.
 # Configuration options
 * `Host`: IP address or hostname of Anthem receiver
 * `Port`: Default to 14999, use value set up in receiver
-* `Panel Brightness`: Control front panel brightness
+* `Front Panel Brightness`: Control front panel brightness
 * `Power`: Add Zone Power accessory (Toggle Zone on and off status)
 * `Volume`: Add Zone Volume accessory (Toggle Zone mute status and control volume level)
 * `Mute`: Add Zone Mute accessory (Toggle Zone mute status)
 * `Input`: Add Zone Input accessory (Cycle Zone active input)
 * `ARC`: Add Zone1 ARC accessory (Toggle Zone1 ARC status, ARC neends to be configured)
-* `ALM`: Add Zone1 Audio Listenning Mode accessory (Cycle Zone1 Current Audio Mode)
-* `Zone Power/Input`: Publish Zone External Power/Input accessory 
+* `Audio Listenning Mode`: Add Zone1 Audio Listenning Mode accessory (Cycle Zone1 Current Audio Mode)
+* `Enable Zone Power/Input`: Publish Zone External Power/Input accessory 
 * `Name`: Zone External Power/Input accessory custom name. Defaults to "Zone1" and "Zone2"
 
 # Adding External Power/Input accessory in Home App

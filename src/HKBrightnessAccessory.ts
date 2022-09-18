@@ -5,14 +5,15 @@ import { AnthemReceiverHomebridgePlatform } from './platform';
 export class HKBrightnessAccessory {
   private service: Service;
   private PanelBrightnessOn = true;
-  private PanelBrightnessLevel = 0;
+  private PreviousBrightnessLevel = 0;
+  private PreviousPanelState = true;
 
   constructor(
     private readonly platform: AnthemReceiverHomebridgePlatform,
     private readonly accessory: PlatformAccessory,
     private readonly Controller: AnthemController,
   ) {
-    this.platform.log.info('Brightness Accessory');
+    this.platform.log.info('Front Panel Brightness Accessory');
 
     this.service = this.accessory.getService(this.platform.Service.Lightbulb)
     || this.accessory.addService(this.platform.Service.Lightbulb);
@@ -31,17 +32,16 @@ export class HKBrightnessAccessory {
       .onSet(this.SetPanelBrightness.bind(this));
 
     this.Controller.on('PanelBrightnessChange', (Brightness:number)=> {
-
+      this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(Brightness > 0);
       this.service.getCharacteristic(this.platform.Characteristic.Brightness).updateValue(Brightness);
-      this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(Brightness>0);
     });
 
     this.Controller.on('ZonePowerChange', ( ) => {
-      // Power off panel accessory if all zone are oof
+      // Power off panel accessory if all zone are off
       if(!this.Controller.GetZonePower(1) && !this.Controller.GetZonePower(2)){
         this.PanelBrightnessOn = false;
         this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
-        this.service.getCharacteristic(this.platform.Characteristic.Brightness).updateValue(0);
+        this.service.getCharacteristic(this.platform.Characteristic.Brightness).updateValue(false);
       }
     });
   }
@@ -58,14 +58,18 @@ export class HKBrightnessAccessory {
       return;
     }
 
-    if(this.PanelBrightnessOn){
-      this.PanelBrightnessLevel = value;
+    if(this.PanelBrightnessOn && !this.PreviousPanelState){
+      this.Controller.SetPanelBrightness(this.PreviousBrightnessLevel);
+      this.service.getCharacteristic(this.platform.Characteristic.Brightness).updateValue(this.PreviousBrightnessLevel);
+      this.PreviousPanelState = true;
+    } else{
+      this.Controller.SetPanelBrightness(value);
     }
-
-    this.Controller.SetPanelBrightness(value);
   }
 
   SetPanelOn(value){
+
+    this.PanelBrightnessOn = value;
 
     // If Zone1 and Zone2 are powered off, cannot change accessory stage
     if(!this.Controller.GetZonePower(1) && !this.Controller.GetZonePower(2)){
@@ -77,11 +81,9 @@ export class HKBrightnessAccessory {
       return;
     }
 
-    this.PanelBrightnessOn = value;
-
-    if(this.PanelBrightnessOn){
-      this.SetPanelBrightness(this.PanelBrightnessLevel);
-    } else{
+    if(!this.PanelBrightnessOn){
+      this.PreviousBrightnessLevel = this.Controller.PanelBrightness;
+      this.PreviousPanelState = false;
       this.SetPanelBrightness(0);
     }
   }
