@@ -5,8 +5,6 @@ import { AnthemReceiverHomebridgePlatform } from './platform';
 export class HKBrightnessAccessory {
   private service: Service;
   private PanelBrightnessOn = true;
-  private PreviousBrightnessLevel = 0;
-  private PreviousPanelState = true;
 
   constructor(
     private readonly platform: AnthemReceiverHomebridgePlatform,
@@ -58,13 +56,7 @@ export class HKBrightnessAccessory {
       return;
     }
 
-    if(this.PanelBrightnessOn && !this.PreviousPanelState){
-      this.Controller.SetPanelBrightness(this.PreviousBrightnessLevel);
-      this.service.getCharacteristic(this.platform.Characteristic.Brightness).updateValue(this.PreviousBrightnessLevel);
-      this.PreviousPanelState = true;
-    } else{
-      this.Controller.SetPanelBrightness(value);
-    }
+    this.Controller.SetPanelBrightness(value);
   }
 
   SetPanelOn(value){
@@ -82,9 +74,9 @@ export class HKBrightnessAccessory {
     }
 
     if(!this.PanelBrightnessOn){
-      this.PreviousBrightnessLevel = this.Controller.PanelBrightness;
-      this.PreviousPanelState = false;
       this.SetPanelBrightness(0);
+    } else{
+      this.SetPanelBrightness(100);
     }
   }
 
