@@ -8,7 +8,7 @@ Homebridge plugin for Anthem Receiver.
 - Zone 1 ARC and Audio Listenning Mode accessories
 - Front Panel Brightness Accessory
 
-![Screenshot](0.5.1.jpg)
+![Screenshot](AR6.jpg)
 
 # Supported models
 - AVM 60,  AVM 70,  AVM 90 
