@@ -13,7 +13,6 @@ export class HKInputsAccessory extends HKAccessory {
     super(platform, Controller, 'Zone' + ZoneNumber + ' Inputs');
     this.platform.log.info('Input Selector Accessory: Zone' + ZoneNumber);
 
-
     // Remove all service
     //for(let i = 0 ; i < this.Accessory.services.length ; i++){
     //  const service = this.Accessory.services[i];
@@ -28,6 +27,14 @@ export class HKInputsAccessory extends HKAccessory {
     for(let i = 0 ; i < Inputs.length ; i++){
       const service = this.AddService(this.platform.Service.Switch, 'Input' + (i+1) + ' ' + Inputs[i], 'Input' + i);
       service.getCharacteristic(this.platform.Characteristic.On).onSet((Value) => {
+
+        if(!this.Controller.GetZonePower(this.ZoneNumber)){
+          setTimeout(() => {
+            service.getCharacteristic(this.platform.Characteristic.On).updateValue((false));
+          }, 100);
+          return;
+        }
+
         if(Value){
           this.Controller.SetZoneInput(this.ZoneNumber, (i+1));
         } else{
@@ -47,6 +54,20 @@ export class HKInputsAccessory extends HKAccessory {
           const service = this.Accessory.getServiceById(this.platform.Service.Switch, 'Input'+i);
           if(service !== undefined){
             service.getCharacteristic(this.platform.Characteristic.On).updateValue((Index === Input));
+          }
+        }
+      }
+    });
+
+    // Handle ZonePowerChange event from controller
+    this.Controller.on('ZonePowerChange', (Zone: number, Power:boolean) => {
+      if(this.ZoneNumber === Zone){
+        for(let i = 0 ; i < Inputs.length ; i++){
+          const service = this.Accessory.getServiceById(this.platform.Service.Switch, 'Input'+i);
+          if(service !== undefined){
+            if(!Power){
+              service.getCharacteristic(this.platform.Characteristic.On).updateValue((false));
+            }
           }
         }
       }

@@ -245,7 +245,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       new HKALMAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
-      const accessory = new this.api.platformAccessory(ZoneNumber + ' ALM', uuid);
+      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ALM', uuid);
       new HKALMAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);

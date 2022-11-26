@@ -39,7 +39,6 @@ export class HKInputAccessory {
       this.Controller.SwitchInput(this.ZoneNumber);
     } else{
       this.platform.log.error('Zone' + this.ZoneNumber +': Cannot switch input, zone is not powered on');
-
     }
   }
 }
