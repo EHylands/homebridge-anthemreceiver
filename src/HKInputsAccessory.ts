@@ -1,4 +1,3 @@
-import { PlatformAccessory, Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { HKAccessory } from './HKAccessory';
 import { AnthemReceiverHomebridgePlatform } from './platform';

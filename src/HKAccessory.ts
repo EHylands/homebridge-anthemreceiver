@@ -1,4 +1,3 @@
-import { SrvRecord } from 'dns';
 import { PlatformAccessory, Service, WithUUID } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
