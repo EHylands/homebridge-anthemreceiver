@@ -3,6 +3,7 @@ import { HKPowerInputAccessory } from './HKPowerInputAccessory';
 import { HKMuteAccessory } from './HKMuteAccessory';
 import { HKPowerAccessory } from './HKPowerAccessory';
 import { HKInputAccessory } from './HKInputAccessory';
+import { HKInputsAccessory } from './HKInputsAccessory';
 import { HKALMAccessory } from './HKALMAccessory';
 import { HKARCAccessory } from './HKARCAccessory';
 import { HKVolumeAccessory } from './HKVolumeAccessory';
@@ -15,7 +16,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
   public readonly accessories: PlatformAccessory[] = [];
-  private CreatedAccessories: PlatformAccessory[] = [];
+  public CreatedAccessories: PlatformAccessory[] = [];
 
   private Controller:AnthemController;
 
@@ -30,6 +31,8 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Zone1ALM = false;
   private Zone1Input = false;
   private Zone2Input = false;
+  private Zone1MultipleInputs = false;
+  private Zone2MultipleInputs =false;
   private Zone1ARC = false;
   private Zone1Volume = false;
   private Zone2Volume = false;
@@ -164,6 +167,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     if(this.Zone2Power){
       this.AddPowerAccessory(2);
+    }
+
+    if(this.Zone1MultipleInputs){
+      new HKInputsAccessory(this, this.Controller, 1);
+    }
+
+    if(this.Zone2MultipleInputs){
+      new HKInputsAccessory(this, this.Controller, 2);
     }
 
     if(this.Zone1Input){
@@ -355,6 +366,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     if(this.config.Zone2.Input !== undefined){
       this.Zone2Input = this.config.Zone2.Input;
+    }
+
+    if(this.config.Zone1.MultipleInputs !== undefined){
+      this.Zone1MultipleInputs = this.config.Zone1.MultipleInputs;
+    }
+
+    if(this.config.Zone2.MultipleInputs !== undefined){
+      this.Zone2MultipleInputs = this.config.Zone2.MultipleInputs;
     }
 
     if(this.config.Zone1.ALM !== undefined){

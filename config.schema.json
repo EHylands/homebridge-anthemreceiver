@@ -53,6 +53,11 @@
             "type": "boolean",
             "default": true
           },
+          "MultipleInputs": {
+            "title": "Input Selector",
+            "type": "boolean",
+            "default": true
+          },
           "ALM": {
             "title": "Audio Listenning Mode - (Cycle active input current audio mode)",
             "type": "boolean",
@@ -101,6 +106,11 @@
             "type": "boolean",
             "default": false
           },
+          "MultipleInputs": {
+            "title": "Input Selector",
+            "type": "boolean",
+            "default": false
+          },
           "Volume": {
             "title": "Volume",
             "type": "boolean",
@@ -140,6 +150,7 @@
         "Zone1.Power",
         "Zone1.Mute",
         "Zone1.Volume",
+        "Zone1.MultipleInputs",
         "Zone1.Input",
         "Zone1.ALM",
         "Zone1.ARC"
@@ -167,6 +178,7 @@
         "Zone2.Power",
         "Zone2.Mute",
         "Zone2.Volume",
+        "Zone2.MultipleInputs",
         "Zone2.Input"
       ]
     },
