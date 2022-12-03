@@ -2,7 +2,8 @@ import { AnthemController} from './AnthemController';
 import { HKAccessory } from './HKAccessory';
 import { AnthemReceiverHomebridgePlatform } from './platform';
 
-export class HKInputsAccessory extends HKAccessory {
+
+export class HKInputAccessoryNG extends HKAccessory {
 
   constructor(
     protected readonly platform: AnthemReceiverHomebridgePlatform,
@@ -12,15 +13,6 @@ export class HKInputsAccessory extends HKAccessory {
 
     super(platform, Controller, 'Zone' + ZoneNumber + ' Inputs');
     this.platform.log.info('Input Selector Accessory: Zone' + ZoneNumber);
-
-    // Remove all service
-    //for(let i = 0 ; i < this.Accessory.services.length ; i++){
-    //  const service = this.Accessory.services[i];
-    //
-    //  if(service.UUID === this.platform.Service.Switch.UUID){
-    //    this.Accessory.removeService(service);
-    //  }
-    //}
 
     // Create service list
     const Inputs = Controller.GetInputs();
@@ -75,6 +67,6 @@ export class HKInputsAccessory extends HKAccessory {
   }
 
   protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'Input Selector';
+    return this.Controller.SerialNumber + this.ZoneNumber + 'Input Selector NG';
   }
 }

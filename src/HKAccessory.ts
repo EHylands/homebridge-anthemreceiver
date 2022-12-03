@@ -22,6 +22,12 @@ export abstract class HKAccessory {
       }
       platform.CreatedAccessories.push(accessory);
       this.Accessory = accessory;
+
+      this.Accessory.getService(this.platform.Service.AccessoryInformation)!
+        .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
+        .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel)
+        .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber)
+        .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
     }
 
     protected abstract CreateUUID(): string;
@@ -37,5 +43,4 @@ export abstract class HKAccessory {
 
       return service || this.Accessory.addService(Type, Name, Subtype);
     }
-
 }

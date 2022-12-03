@@ -3,8 +3,9 @@ import { HKPowerInputAccessory } from './HKPowerInputAccessory';
 import { HKMuteAccessory } from './HKMuteAccessory';
 import { HKPowerAccessory } from './HKPowerAccessory';
 import { HKInputAccessory } from './HKInputAccessory';
-import { HKInputsAccessory } from './HKInputsAccessory';
+import { HKInputAccessoryNG } from './HKInputAccessoryNG';
 import { HKALMAccessory } from './HKALMAccessory';
+import { HKALMAccessoryNG } from './HKALMAccessoryNG';
 import { HKARCAccessory } from './HKARCAccessory';
 import { HKVolumeAccessory } from './HKVolumeAccessory';
 import { HKBrightnessAccessory } from './HKBrightnessAccessory';
@@ -170,11 +171,11 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     if(this.Zone1MultipleInputs){
-      new HKInputsAccessory(this, this.Controller, 1);
+      new HKInputAccessoryNG(this, this.Controller, 1);
     }
 
     if(this.Zone2MultipleInputs){
-      new HKInputsAccessory(this, this.Controller, 2);
+      new HKInputAccessoryNG(this, this.Controller, 2);
     }
 
     if(this.Zone1Input){
@@ -186,7 +187,8 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     if(this.Zone1ALM){
-      this.AddALMAccessory(1);
+      //this.AddALMAccessory(1);
+      new HKALMAccessoryNG(this, this.Controller, 1);
     }
 
     if(this.Zone1ARC){

@@ -1,11 +1,13 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
 import net = require('net');
+import { OpenDirOptions } from 'fs';
 
 export interface AnthemControllerEvent {
     'ControllerReadyForOperation': () => void;
     'PanelBrightnessChange': (Brightness: number) => void;
     'ZonePowerChange': (Zone: number, Power: boolean) => void;
     'ZoneMutedChange': (Zone: number, Muted:boolean)=> void;
+    'ZoneALMChange':(Zone:number, ALM:number)=> void;
     'ZoneVolumePercentageChange': (Zone: number, VolumePercentage:number)=> void;
     'ZoneARCEnabledChange':(Zone: number, ARCEnabled:boolean)=>void;
     'ZoneInputChange': (Zone: number, Input: number) => void;
@@ -28,6 +30,18 @@ export enum AnthemReceiverModel {
   AVM60 = 'AVM 60',
   AVM70 = 'AVM 70',
   AVM90 = 'AVM 90'
+}
+
+export enum AnthemAudioListenningMode {
+  NONE = 0,
+  ANTHEMLOGIC_CINEMA = 1,
+  ANTHEMLOGIC_MUSIC = 2,
+  DOLBYSUROUND = 3,
+  DTSNEURALX = 4,
+  DTSVIRTUALX = 5,
+  ALLCHANNELSTEREO = 6,
+  MONO = 7,
+  ALLCHANNELMONO = 8
 }
 
 const AllAnthemReceiverModel = [
@@ -69,6 +83,36 @@ enum ControllerState {
     Operation,
 }
 
+const ALMV01 = [
+  'AnthemLogic Movie',
+  'AnthemLogic Music',
+  'PLIIx Movie',
+  'PLIIx Music',
+  'Neo:6 Cinema',
+  'Neo:6 Music',
+  'All Channel Stereo',
+  'All Channel Mono',
+  'Mono',
+  'Mono Academy',
+  'Mono(L)',
+  'Mono(R)',
+  'High Blend',
+  'Dolby Surround',
+  'Neo:X-Cinema',
+  'Neo:X-Music',
+];
+
+const ALMV02 = [
+  'ANTHEM LOGIC CINEMA',
+  'ANTHEM LOGIC MUSIC',
+  'DOLBY SURROUND',
+  'DTS NEURAL X',
+  'DTS VIRTUAL X',
+  'ALL CHANNEL STEREO',
+  'MONO',
+  'ALL CHANNEL MONO',
+];
+
 export enum AnthemControllerError {
     CONNECTION_ERROR = 'Controller Connection Error',
     ZONE_IS_NOT_POWERED = 'Zone is not powered',
@@ -100,6 +144,7 @@ export class AnthemZone{
   private PowerConfigured = false;
   private VolumePercentage = 0;
   private Volume = 0;
+  private AudioListenningMode = AnthemAudioListenningMode.NONE;
   ZoneName = '';
 
   constructor(ZoneNumber: number, ZoneName: string, IsMainZone: boolean) {
@@ -171,6 +216,14 @@ export class AnthemZone{
 
   IsZoneConfigured():boolean{
     return this.PowerConfigured;
+  }
+
+  SetALM(AudioListenningMode:number){
+    this.AudioListenningMode = AudioListenningMode;
+  }
+
+  GetALM():number{
+    return this.AudioListenningMode;
   }
 }
 
@@ -285,6 +338,18 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         Input = 1;
       }
       this.SetZoneInput(ZoneNumber, Input);
+    }
+
+    GetALMArray():string[]{
+      if(this.IsProtocolV01()){
+        return ALMV01;
+      }
+
+      if(this.IsProtocolV02()){
+        return ALMV02;
+      }
+
+      return [];
     }
 
     //
@@ -593,6 +658,25 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       this.SendCommand();
     }
 
+
+    //
+    // Function SetAudioListeningMode()
+    //
+    // Availability: All model
+    SetAudioListeningMode(ZoneNumber:number, AudioMode: number){
+      if(!this.Zones[ZoneNumber].GetIsMainZone()){
+        this.emit('ControllerError', AnthemControllerError.COMMAND_ONLY_AVAILABLE_ON_MAIN_ZONE, '');
+        return;
+      }
+
+      if(this.IsProtocolV02()){
+        this.QueueCommand('Z' + ZoneNumber + 'ALM' + AudioMode);
+      } else{
+        //
+      }
+      this.SendCommand();
+    }
+
     //
     // Function ToggleAudioListeningMode()
     // Iterate throught inputs
@@ -619,6 +703,21 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
         }
 
       }
+      this.SendCommand();
+    }
+
+    //
+    // Function GetAudioListeningMode()
+    // Iterate throught inputs
+    //
+    // Availability: All model
+    GetAudioListeningMode(ZoneNumber:number){
+      if(!this.Zones[ZoneNumber].GetIsMainZone()){
+        this.emit('ControllerError', AnthemControllerError.COMMAND_ONLY_AVAILABLE_ON_MAIN_ZONE, '');
+        return;
+      }
+
+      this.QueueCommand('Z1ALM?');
       this.SendCommand();
     }
 
@@ -833,6 +932,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       this.GetConfigMenuState();
       this.GetNumberOfInputFromReceiver();
       this.GetPanelBrightness();
+      this.GetAudioListeningMode(1);
       this.SendCommand();
     }
 
@@ -941,6 +1041,18 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
               }
 
               break;
+            }
+          }
+
+          // Set Zone ALM
+          for(const ZoneNumber in this.Zones){
+            const Zone = this.Zones[ZoneNumber];
+            if(Response.substring(0, 5) === ('Z' + ZoneNumber + 'ALM')){
+              Zone.SetALM(Number(Response[5]));
+              if(this.CurrentState === ControllerState.Operation){
+                this.emit('ZoneALMChange', Number(ZoneNumber), Zone.GetALM());
+              }
+
             }
           }
 

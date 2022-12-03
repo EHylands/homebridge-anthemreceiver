@@ -48,18 +48,13 @@
             "type": "boolean",
             "default": true
           },
-          "Input": {
-            "title": "Input - (Cycle current active input)",
-            "type": "boolean",
-            "default": true
-          },
           "MultipleInputs": {
-            "title": "Input Selector",
+            "title": "Input Selector - (NEW)",
             "type": "boolean",
             "default": true
           },
           "ALM": {
-            "title": "Audio Listenning Mode - (Cycle active input current audio mode)",
+            "title": "Audio Listenning Mode - (NEW)",
             "type": "boolean",
             "default": true,
             "description": ""
@@ -101,13 +96,8 @@
             "type": "boolean",
             "default": false
           },
-          "Input": {
-            "title": "Input - (Cycle current active input)",
-            "type": "boolean",
-            "default": false
-          },
           "MultipleInputs": {
-            "title": "Input Selector",
+            "title": "Input Selector - (NEW)",
             "type": "boolean",
             "default": false
           },
@@ -151,7 +141,6 @@
         "Zone1.Mute",
         "Zone1.Volume",
         "Zone1.MultipleInputs",
-        "Zone1.Input",
         "Zone1.ALM",
         "Zone1.ARC"
       ]
@@ -178,9 +167,7 @@
         "Zone2.Power",
         "Zone2.Mute",
         "Zone2.Volume",
-        "Zone2.MultipleInputs",
-        "Zone2.Input"
-      ]
+        "Zone2.MultipleInputs"      ]
     },
     {
       "title": "Zone 2 - Power/Input Accessory>",
