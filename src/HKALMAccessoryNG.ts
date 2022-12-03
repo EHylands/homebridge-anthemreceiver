@@ -29,7 +29,7 @@ export class HKALMAccessoryNG extends HKAccessory {
         }
 
         if(Value){
-          this.Controller.SetAudioListeningMode(this.ZoneNumber, i);
+          this.Controller.SetAudioListeningMode(this.ZoneNumber, i+1);
         } else{
           setTimeout(() => {
             service.getCharacteristic(this.platform.Characteristic.On).updateValue((true));

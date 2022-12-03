@@ -1,6 +1,5 @@
 import { TypedEmitter } from 'tiny-typed-emitter';
 import net = require('net');
-import { OpenDirOptions } from 'fs';
 
 export interface AnthemControllerEvent {
     'ControllerReadyForOperation': () => void;
