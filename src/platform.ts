@@ -3,7 +3,9 @@ import { HKPowerInputAccessory } from './HKPowerInputAccessory';
 import { HKMuteAccessory } from './HKMuteAccessory';
 import { HKPowerAccessory } from './HKPowerAccessory';
 import { HKInputAccessory } from './HKInputAccessory';
+import { HKInputAccessoryNG } from './HKInputAccessoryNG';
 import { HKALMAccessory } from './HKALMAccessory';
+import { HKALMAccessoryNG } from './HKALMAccessoryNG';
 import { HKARCAccessory } from './HKARCAccessory';
 import { HKVolumeAccessory } from './HKVolumeAccessory';
 import { HKBrightnessAccessory } from './HKBrightnessAccessory';
@@ -15,7 +17,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
   public readonly accessories: PlatformAccessory[] = [];
-  private CreatedAccessories: PlatformAccessory[] = [];
+  public CreatedAccessories: PlatformAccessory[] = [];
 
   private Controller:AnthemController;
 
@@ -30,6 +32,8 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Zone1ALM = false;
   private Zone1Input = false;
   private Zone2Input = false;
+  private Zone1MultipleInputs = false;
+  private Zone2MultipleInputs =false;
   private Zone1ARC = false;
   private Zone1Volume = false;
   private Zone2Volume = false;
@@ -166,6 +170,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.AddPowerAccessory(2);
     }
 
+    if(this.Zone1MultipleInputs){
+      new HKInputAccessoryNG(this, this.Controller, 1);
+    }
+
+    if(this.Zone2MultipleInputs){
+      new HKInputAccessoryNG(this, this.Controller, 2);
+    }
+
     if(this.Zone1Input){
       this.AddInputAccessory(1);
     }
@@ -175,7 +187,8 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     if(this.Zone1ALM){
-      this.AddALMAccessory(1);
+      //this.AddALMAccessory(1);
+      new HKALMAccessoryNG(this, this.Controller, 1);
     }
 
     if(this.Zone1ARC){
@@ -234,7 +247,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       new HKALMAccessory(this, existingAccessory, this.Controller, ZoneNumber);
       this.CreatedAccessories.push(existingAccessory);
     } else{
-      const accessory = new this.api.platformAccessory(ZoneNumber + ' ALM', uuid);
+      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ALM', uuid);
       new HKALMAccessory(this, accessory, this.Controller, ZoneNumber);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
@@ -355,6 +368,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     if(this.config.Zone2.Input !== undefined){
       this.Zone2Input = this.config.Zone2.Input;
+    }
+
+    if(this.config.Zone1.MultipleInputs !== undefined){
+      this.Zone1MultipleInputs = this.config.Zone1.MultipleInputs;
+    }
+
+    if(this.config.Zone2.MultipleInputs !== undefined){
+      this.Zone2MultipleInputs = this.config.Zone2.MultipleInputs;
     }
 
     if(this.config.Zone1.ALM !== undefined){

@@ -25,22 +25,10 @@ Homebridge plugin for Anthem Receiver.
 - ARC, Power, Volume, Mute, Input, Panel Brightness and Audio Listenning Mode accessories will be added automatically if enabled. 
 - Power/Input accessories are to be manually added in Home App. This step is needed for Apple Remote to be present in control center. See procedure below.
 
-# Configuration options
-* `Host`: IP address or hostname of Anthem receiver
-* `Port`: Default to 14999, use value set up in receiver
-* `Front Panel Brightness`: Control front panel brightness
-* `Power`: Add Zone Power accessory (Toggle Zone on and off status)
-* `Volume`: Add Zone Volume accessory (Toggle Zone mute status and control volume level)
-* `Mute`: Add Zone Mute accessory (Toggle Zone mute status)
-* `Input`: Add Zone Input accessory (Cycle Zone active input)
-* `ARC`: Add Zone1 ARC accessory (Toggle Zone1 ARC status, ARC neends to be configured)
-* `Audio Listenning Mode`: Add Zone1 Audio Listenning Mode accessory (Cycle Zone1 Current Audio Mode)
-* `Enable Zone Power/Input`: Publish Zone External Power/Input accessory 
-* `Name`: Zone External Power/Input accessory custom name. Defaults to "Zone1" and "Zone2"
 
 # Adding External Power/Input accessory in Home App
-## iOS 15
-- Enable "Power/Input" accessory in config file or Homebridge UI. Restart Homebridge after any modifications
+## iOS 16
+- Enable "Power/Input" accessory in Homebridge UI config page. Restart Homebridge after any modifications
 - Open Home App
 - Select "+" on the right upper corner of the screen and select "Add Accessory"
 - Select "More options"
@@ -57,5 +45,10 @@ Homebridge plugin for Anthem Receiver.
 * CENTER button so select option (Main Zone)
 
 # Known issues
-- Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to appear in HomeKit. If inputs are not visible under Power/Input Accessory, please kill and reopen Home App. 
+## General Operation
 - It takes a few seconds for the receiver to become responsive to HomeKit commands on startup even if the receiver reports being powered on in Homekit.
+## External Power/Input Accessories
+- Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to appear in HomeKit. If inputs are not visible under Power/Input Accessory, please kill and reopen Home App. 
+## Platform Accessories
+- Zone inputs accessory needs to be remove and readded to homebridge if inputs are added orremoved on the receiver for changes to appear in HomeKit.
+- All switch under Input and ALM accessorie will be set with default name "Zone Input" and "Zone1 ALM". This is a known iOS bug/feature. Please select every swith accessory details view and delete accessory name. The intended name will be available as a placeholder. 
