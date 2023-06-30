@@ -732,7 +732,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             return false;
           }
         }
-        return true;
+        return this.IsAllInputConfigured();
       }
 
       if(this.IsProtocolV02()){
