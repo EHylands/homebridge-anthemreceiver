@@ -946,6 +946,9 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
       if(this.IsProtocolV01()){
         this.GetMACAddress();
+
+        // Experimental
+        this.GetNumberOfInputFromReceiver();
       }
 
       // Protocol 2 devices can read inputs number and inputs names even if zone is powered off
