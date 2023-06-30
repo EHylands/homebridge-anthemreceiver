@@ -1122,9 +1122,11 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
             this.InputNameArray[InputNumber - 1] = Name;
 
-            if(InputNumber === this.InputNameArray.length){
-              if(this.GetInputHasChange()){
-                this.emit('InputChange', this.InputNameArray);
+            if(this.CurrentState === ControllerState.Operation){
+              if(InputNumber === this.InputNameArray.length){
+                if(this.GetInputHasChange()){
+                  this.emit('InputChange', this.InputNameArray);
+                }
               }
             }
           }
