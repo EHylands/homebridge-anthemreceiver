@@ -131,6 +131,13 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     const Inputs = this.Controller.GetInputs();
 
+    //if(this.Zone1Active || this.Zone2Active){
+    this.log.info('Plugin Source Inputs Number: ' + Inputs.length);
+    for(let i = 0 ; i < Inputs.length ; i ++){
+      this.log.info(' -Input' + (i + 1) + ': ' + Inputs[i]);
+    }
+    //}
+
     if(this.Zone1Active){
       const AnthemReceiver = new HKPowerInputAccessory(this, this.Controller, 1);
       this.AnthemReceiverPowerInputArray.push(AnthemReceiver);
@@ -141,13 +148,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       const AnthemReceiver2 = new HKPowerInputAccessory(this, this.Controller, 2);
       this.AnthemReceiverPowerInputArray.push(AnthemReceiver2);
       AnthemReceiver2.SetInputs(Inputs);
-    }
-
-    if(this.Zone1Active || this.Zone2Active){
-      this.log.info('Plugin Source Inputs Number: ' + Inputs.length);
-      for(let i = 0 ; i < Inputs.length ; i ++){
-        this.log.info(' -Input' + (i + 1) + ': ' + Inputs[i]);
-      }
     }
 
     if(this.PanelBrightness){
@@ -409,10 +409,17 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.info('Serial Number: ' + this.Controller.SerialNumber);
     this.log.info('Software Version: ' + this.Controller.SoftwareVersion);
 
-    this.log.info('Controlling ' + this.Controller.GetConfiguredZoneNumber() +' Zones');
+    this.log.info('Zones: ' + this.Controller.GetConfiguredZoneNumber());
     for(const ZoneNumber in this.Controller.GetZones()){
       const Zone = this.Controller.GetZones()[ZoneNumber];
       this.log.info(' Zone:' + ZoneNumber + ': ' + Zone.ZoneName);
+    }
+
+    const Inputs = this.Controller.GetInputs();
+
+    this.log.info('Inputs: ' + Inputs.length);
+    for(let i = 0 ; i < Inputs.length ; i ++){
+      this.log.info(' Input' + (i + 1) + ': ' + Inputs[i]);
     }
   }
 
