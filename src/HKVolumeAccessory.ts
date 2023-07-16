@@ -20,7 +20,7 @@ export class HKVolumeAccessory extends HKAccessory {
     // set accessory information
     this.Accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' Volume Accessory')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Volume')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Volume');
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.SetMute.bind(this));
