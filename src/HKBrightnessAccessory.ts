@@ -11,7 +11,7 @@ export class HKBrightnessAccessory {
     private readonly accessory: PlatformAccessory,
     private readonly Controller: AnthemController,
   ) {
-    this.platform.log.info('Front Panel Brightness Accessory');
+    this.platform.log.info('Front Panel Brightness');
 
     this.service = this.accessory.getService(this.platform.Service.Lightbulb)
     || this.accessory.addService(this.platform.Service.Lightbulb);

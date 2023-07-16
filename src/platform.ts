@@ -2,15 +2,14 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 import { HKPowerInputAccessory } from './HKPowerInputAccessory';
 import { HKMuteAccessory } from './HKMuteAccessory';
 import { HKPowerAccessory } from './HKPowerAccessory';
-import { HKInputAccessory } from './HKInputAccessory';
 import { HKInputAccessoryNG } from './HKInputAccessoryNG';
-import { HKALMAccessory } from './HKALMAccessory';
 import { HKALMAccessoryNG } from './HKALMAccessoryNG';
 import { HKARCAccessory } from './HKARCAccessory';
 import { HKVolumeAccessory } from './HKVolumeAccessory';
 import { HKBrightnessAccessory } from './HKBrightnessAccessory';
 import { AnthemController, AnthemControllerError } from './AnthemController';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
+import { HKDolbyPostProcessingAccessory } from './HKDolbyPostProcessingAccessory';
 
 export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -37,6 +36,8 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Zone1ARC = false;
   private Zone1Volume = false;
   private Zone2Volume = false;
+  private Zone1DolbyPostProcessing = false;
+  private Zone2DolbyPostProcessing = false;
   private PanelBrightness = false;
 
   private Port = '14999';
@@ -126,22 +127,47 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   discoverDevices() {
 
     this.log.info('-----------------------------------------');
-    this.log.info('Configuring Hombebridge Plugin');
+    this.log.info('Configuring Hombebridge Accessories');
     this.log.info('-----------------------------------------');
 
     const Inputs = this.Controller.GetInputs();
 
-    //if(this.Zone1Active || this.Zone2Active){
-    this.log.info('Plugin Source Inputs Number: ' + Inputs.length);
-    for(let i = 0 ; i < Inputs.length ; i ++){
-      this.log.info(' -Input' + (i + 1) + ': ' + Inputs[i]);
+    if(this.PanelBrightness){
+      this.AddBrightnessAccessory();
     }
-    //}
 
     if(this.Zone1Active){
       const AnthemReceiver = new HKPowerInputAccessory(this, this.Controller, 1);
       this.AnthemReceiverPowerInputArray.push(AnthemReceiver);
       AnthemReceiver.SetInputs(Inputs);
+    }
+
+    if(this.Zone1Mute){
+      new HKMuteAccessory(this, this.Controller, 1);
+    }
+
+    if(this.Zone1Power){
+      new HKPowerAccessory(this, this.Controller, 1);
+    }
+
+    if(this.Zone1Volume){
+      this.ADDVolumeAccessory(1);
+    }
+
+    if(this.Zone1MultipleInputs){
+      new HKInputAccessoryNG(this, this.Controller, 1);
+    }
+
+    if(this.Zone1ARC){
+      this.ADDArcAccessory(1);
+    }
+
+    if(this.Zone1ALM){
+      new HKALMAccessoryNG(this, this.Controller, 1);
+    }
+
+    if(this.Zone1DolbyPostProcessing){
+      this.AddDolbyPostProcessingAccessory(1);
     }
 
     if(this.Zone2Active){
@@ -150,57 +176,25 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       AnthemReceiver2.SetInputs(Inputs);
     }
 
-    if(this.PanelBrightness){
-      this.AddBrightnessAccessory();
-    }
-
-    if(this.Zone1Mute){
-      this.AddMuteAccessory(1);
-    }
-
     if(this.Zone2Mute){
-      this.AddMuteAccessory(2);
-    }
-
-    if(this.Zone1Power){
-      this.AddPowerAccessory(1);
+      new HKMuteAccessory(this, this.Controller, 2);
     }
 
     if(this.Zone2Power){
-      this.AddPowerAccessory(2);
-    }
-
-    if(this.Zone1MultipleInputs){
-      new HKInputAccessoryNG(this, this.Controller, 1);
+      new HKPowerAccessory(this, this.Controller, 2);
     }
 
     if(this.Zone2MultipleInputs){
       new HKInputAccessoryNG(this, this.Controller, 2);
     }
 
-    if(this.Zone1Input){
-      this.AddInputAccessory(1);
-    }
-
-    if(this.Zone2Input){
-      this.AddInputAccessory(2);
-    }
-
-    if(this.Zone1ALM){
-      //this.AddALMAccessory(1);
-      new HKALMAccessoryNG(this, this.Controller, 1);
-    }
-
-    if(this.Zone1ARC){
-      this.ADDArcAccessory(1);
-    }
-
-    if(this.Zone1Volume){
-      this.ADDVolumeAccessory(1);
-    }
-
     if(this.Zone2Volume){
       this.ADDVolumeAccessory(2);
+    }
+
+    if(this.Zone2DolbyPostProcessing){
+      this.AddDolbyPostProcessingAccessory(2);
+
     }
 
     this.DeviceCacheCleanUp();
@@ -240,62 +234,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  private AddALMAccessory(ZoneNumber: number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'ALM Accessory');
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      new HKALMAccessory(this, existingAccessory, this.Controller, ZoneNumber);
-      this.CreatedAccessories.push(existingAccessory);
-    } else{
-      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ALM', uuid);
-      new HKALMAccessory(this, accessory, this.Controller, ZoneNumber);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.CreatedAccessories.push(accessory);
-    }
-  }
-
-  AddMuteAccessory(ZoneNumber: number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Mute Accessory');
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      new HKMuteAccessory(this, existingAccessory, this.Controller, ZoneNumber);
-      this.CreatedAccessories.push(existingAccessory);
-    } else{
-      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Mute', uuid);
-      new HKMuteAccessory(this, accessory, this.Controller, ZoneNumber);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.CreatedAccessories.push(accessory);
-    }
-  }
-
-  AddPowerAccessory(ZoneNumber:number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Power Accessory');
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      new HKPowerAccessory(this, existingAccessory, this.Controller, ZoneNumber);
-      this.CreatedAccessories.push(existingAccessory);
-    } else{
-      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Power', uuid);
-      new HKPowerAccessory(this, accessory, this.Controller, ZoneNumber);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.CreatedAccessories.push(accessory);
-    }
-  }
-
-  AddInputAccessory(ZoneNumber:number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Input Accessory');
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      new HKInputAccessory(this, existingAccessory, this.Controller, ZoneNumber);
-      this.CreatedAccessories.push(existingAccessory);
-    } else{
-      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Input', uuid);
-      new HKInputAccessory(this, accessory, this.Controller, ZoneNumber);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.CreatedAccessories.push(accessory);
-    }
-  }
-
   AddBrightnessAccessory(){
 
     if(!this.Controller.IsProtocolV02()){
@@ -314,6 +252,15 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       this.CreatedAccessories.push(accessory);
     }
+  }
+
+  AddDolbyPostProcessingAccessory(Zone:number){
+    if(!this.Controller.IsProtocolV02()){
+      this.log.error('Dolbpy Post-Processing Accessory: Not adding accessory (only supported on X40 Serie)');
+      return;
+    }
+
+    new HKDolbyPostProcessingAccessory(this, this.Controller, Zone);
   }
 
   private CheckConfigFile():boolean{
@@ -396,6 +343,14 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     if(this.config.PanelBrightness !== undefined){
       this.PanelBrightness = this.config.PanelBrightness;
+    }
+
+    if(this.config.Zone1.DolbyPostProcessing !== undefined){
+      this.Zone1DolbyPostProcessing = this.config.Zone1.DolbyPostProcessing;
+    }
+
+    if(this.config.Zone2.DolbyPostProcessing !== undefined){
+      this.Zone2DolbyPostProcessing = this.config.Zone2.DolbyPostProcessing;
     }
 
     return true;

@@ -12,7 +12,7 @@ export class HKInputAccessoryNG extends HKAccessory {
   ){
 
     super(platform, Controller, 'Zone' + ZoneNumber + ' Inputs');
-    this.platform.log.info('Input Selector Accessory: Zone' + ZoneNumber);
+    this.platform.log.info('Zone' + ZoneNumber + ': Input Selector');
 
     // Create service list
     const Inputs = Controller.GetInputs();

@@ -11,7 +11,7 @@ export class HKARCAccessory {
     private readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    this.platform.log.info('ARC Accessory: Zone' + ZoneNumber);
+    this.platform.log.info('Zone' + ZoneNumber + ': ARC');
 
     this.service = this.accessory.getService(this.platform.Service.Switch)
     || this.accessory.addService(this.platform.Service.Switch);
