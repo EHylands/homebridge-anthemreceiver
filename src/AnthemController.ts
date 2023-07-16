@@ -1052,7 +1052,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
           }
 
           // Get Dolby Post Processing
-          if(Response.substring(0, 2) === 'IS' && Response.substring(3, 5) == 'DV'){
+          if(Response.substring(0, 2) === 'IS' && Response.substring(3, 5) === 'DV'){
             const Input = Number(Response[2]);
             const DolbyAudioMode = Number(Response[5]);
 
