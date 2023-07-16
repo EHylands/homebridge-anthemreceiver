@@ -32,7 +32,7 @@ export abstract class HKAccessory {
 
     protected abstract CreateUUID(): string;
 
-    protected AddService(Type: WithUUID<typeof Service>, Name:string, Subtype?:string){
+    protected AddService(Type: WithUUID<typeof Service>, Name:string, Subtype:string){
 
       let service: Service | undefined;
       if (Subtype) {

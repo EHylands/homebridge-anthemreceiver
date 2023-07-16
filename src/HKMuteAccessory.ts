@@ -1,27 +1,26 @@
-import { PlatformAccessory, Service } from 'homebridge';
+import { Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
+import { HKAccessory } from './HKAccessory';
 
-export class HKMuteAccessory {
+export class HKMuteAccessory extends HKAccessory {
   private service: Service;
 
   constructor(
-    private readonly platform: AnthemReceiverHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
-    private readonly Controller: AnthemController,
+    protected readonly platform: AnthemReceiverHomebridgePlatform,
+    protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    this.platform.log.info('Mute Accessory: Zone' + ZoneNumber);
+    super(platform, Controller, 'Zone' + ZoneNumber + ' Mute');
 
-    this.service = this.accessory.getService(this.platform.Service.Switch)
-    || this.accessory.addService(this.platform.Service.Switch);
+    this.platform.log.info('Zone' + ZoneNumber + ': Mute');
 
-    // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
+    this.service = this.Accessory.getService(this.platform.Service.Switch)
+    || this.Accessory.addService(this.platform.Service.Switch);
+
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' Mute Accessory')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Mute')
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Mute');
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.SetMute.bind(this));
@@ -58,5 +57,9 @@ export class HKMuteAccessory {
         this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
       }, 100);
     }
+  }
+
+  protected CreateUUID(): string {
+    return this.Controller.SerialNumber + this.ZoneNumber + 'Mute Accessory';
   }
 }

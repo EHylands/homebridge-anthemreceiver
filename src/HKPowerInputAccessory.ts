@@ -18,7 +18,7 @@ export class HKPowerInputAccessory {
     const Name = this.Controller.GetZoneName(this.ZoneNumber);
     this.HdmiInputService = [];
 
-    this.platform.log.info('Power/Input Accessory: Zone' + ZoneNumber);
+    this.platform.log.info( 'Zone' + ZoneNumber + ': Power/Input');
 
     const uuid = this.platform.api.hap.uuid.generate('Anthem_Receiver' + this.Controller.ReceiverModel +
     this.Controller.SerialNumber + ZoneNumber);

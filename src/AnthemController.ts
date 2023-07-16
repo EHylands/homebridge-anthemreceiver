@@ -7,6 +7,7 @@ export interface AnthemControllerEvent {
     'ZonePowerChange': (Zone: number, Power: boolean) => void;
     'ZoneMutedChange': (Zone: number, Muted:boolean)=> void;
     'ZoneALMChange':(Zone:number, ALM:number)=> void;
+    'ZoneDolbyPostProcessingChange':(Zone:number, DolbyAudioMode:AnthemDolbyAudioPostProcessing)=> void;
     'ZoneVolumePercentageChange': (Zone: number, VolumePercentage:number)=> void;
     'ZoneARCEnabledChange':(Zone: number, ARCEnabled:boolean)=>void;
     'ZoneInputChange': (Zone: number, Input: number) => void;
@@ -42,6 +43,15 @@ export enum AnthemAudioListenningMode {
   MONO = 7,
   ALLCHANNELMONO = 8
 }
+
+export enum AnthemDolbyAudioPostProcessing {
+  OFF = 0,
+  MOVIE = 1,
+  MUSIC = 2,
+  NIGHT = 3,
+}
+
+
 
 const AllAnthemReceiverModel = [
   AnthemReceiverModel.MRX310,
@@ -139,6 +149,7 @@ export class AnthemZone{
   private ARCConfigured = true;
   private ActiveInput = 0;
   private ActiveInputARCEnabled = false;
+  private ActiveInputDolbyPostProcessing = 0;
   private IsPowered = false;
   private PowerConfigured = false;
   private VolumePercentage = 0;
@@ -657,6 +668,27 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       this.SendCommand();
     }
 
+    //
+    // Function GetDolbyPostProcessing()
+    //
+    // Availability: x40 models
+    GetDolbyPostProcessing(ZoneNumber:number){
+      if(this.IsProtocolV02()){
+        this.QueueCommand('IS' + this.Zones[ZoneNumber].GetActiveInput() +'DV?');
+        this.SendCommand();
+      }
+    }
+
+    //
+    // Function SetDolbyPostProcessing()
+    //
+    // Availability: x40 models
+    SetDolbyPostProcessing(ZoneNumber:number, DolbyAudioMode:number){
+      if(this.IsProtocolV02()){
+        this.QueueCommand('IS' + this.Zones[ZoneNumber].GetActiveInput() +'DV' + DolbyAudioMode);
+        this.SendCommand();
+      }
+    }
 
     //
     // Function SetAudioListeningMode()
@@ -732,7 +764,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             return false;
           }
         }
-        return true;
+        return this.IsAllInputConfigured();
       }
 
       if(this.IsProtocolV02()){
@@ -946,6 +978,9 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
       if(this.IsProtocolV01()){
         this.GetMACAddress();
+
+        // Experimental
+        this.GetNumberOfInputFromReceiver();
       }
 
       // Protocol 2 devices can read inputs number and inputs names even if zone is powered off
@@ -1013,6 +1048,19 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
             if(this.CurrentState === ControllerState.Operation){
               this.emit('PanelBrightnessChange', this.PanelBrightness);
+            }
+          }
+
+          // Get Dolby Post Processing
+          if(Response.substring(0, 2) === 'IS' && Response.substring(3, 5) === 'DV'){
+            const Input = Number(Response[2]);
+            const DolbyAudioMode = Number(Response[5]);
+
+            for(const ZoneNumber in this.Zones){
+              const Zone = this.Zones[ZoneNumber];
+              if(Zone.GetActiveInput() === Input){
+                this.emit('ZoneDolbyPostProcessingChange', Number(ZoneNumber), DolbyAudioMode);
+              }
             }
           }
 
@@ -1119,9 +1167,11 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
             this.InputNameArray[InputNumber - 1] = Name;
 
-            if(InputNumber === this.InputNameArray.length){
-              if(this.GetInputHasChange()){
-                this.emit('InputChange', this.InputNameArray);
+            if(this.CurrentState === ControllerState.Operation){
+              if(InputNumber === this.InputNameArray.length){
+                if(this.GetInputHasChange()){
+                  this.emit('InputChange', this.InputNameArray);
+                }
               }
             }
           }
@@ -1131,6 +1181,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
             const Zone = this.Zones[ZoneNumber];
             if(Response.substring(0, 5) === ('Z' + ZoneNumber + 'INP')){
               Zone.SetActiveInput(Number(Response.substring(5, Response.length)));
+              this.GetDolbyPostProcessing(Number(ZoneNumber));
 
               if(Zone.GetIsMainZone()){
                 this.GetZoneARCEnabled(Number(ZoneNumber));

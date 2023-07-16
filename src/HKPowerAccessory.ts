@@ -1,27 +1,26 @@
-import { PlatformAccessory, Service } from 'homebridge';
+import { Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
+import { HKAccessory } from './HKAccessory';
 
-export class HKPowerAccessory {
+
+export class HKPowerAccessory extends HKAccessory {
   private service: Service;
 
   constructor(
-    private readonly platform: AnthemReceiverHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
-    private readonly Controller: AnthemController,
+    protected readonly platform: AnthemReceiverHomebridgePlatform,
+    protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    this.platform.log.info('Power Accessory: Zone' + ZoneNumber);
 
-    this.service = this.accessory.getService(this.platform.Service.Switch)
-    || this.accessory.addService(this.platform.Service.Switch);
+    super(platform, Controller, 'Zone' + ZoneNumber + ' Power');
+    this.platform.log.info('Zone' + ZoneNumber + ': Power');
+    this.service = this.Accessory.getService(this.platform.Service.Switch) || this.Accessory.addService(this.platform.Service.Switch);
 
-    // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
-      .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' Power Accessory')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Power')
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel+ ' Power Accessory')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber+ ' Power');
+
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.SetPower.bind(this));
@@ -43,5 +42,9 @@ export class HKPowerAccessory {
 
   SetPower(value){
     this.Controller.PowerZone(this.ZoneNumber, value);
+  }
+
+  protected CreateUUID(): string {
+    return this.Controller.SerialNumber + this.ZoneNumber + 'Power Accessory';
   }
 }

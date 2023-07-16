@@ -11,7 +11,7 @@ export class HKVolumeAccessory {
     private readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    this.platform.log.info('Volume Accessory: Zone' + ZoneNumber);
+    this.platform.log.info('Zone' + ZoneNumber + ': Volume');
 
     this.service = this.accessory.getService(this.platform.Service.Lightbulb)
     || this.accessory.addService(this.platform.Service.Lightbulb);
