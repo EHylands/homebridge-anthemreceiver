@@ -49,12 +49,12 @@
             "default": true
           },
           "MultipleInputs": {
-            "title": "Input Selector - (NEW)",
+            "title": "Input Selector",
             "type": "boolean",
             "default": true
           },
           "ALM": {
-            "title": "Audio Listenning Mode - (NEW)",
+            "title": "Audio Listenning Mode",
             "type": "boolean",
             "default": true,
             "description": ""
@@ -68,6 +68,12 @@
             "title": "Volume",
             "type": "boolean",
             "default": true
+          },
+          "DolbyPostProcessing": {
+            "title": "Dolby Post Processing",
+            "type": "boolean",
+            "default": true,
+            "description": ""
           }
         }
       },
@@ -97,7 +103,7 @@
             "default": false
           },
           "MultipleInputs": {
-            "title": "Input Selector - (NEW)",
+            "title": "Input Selector",
             "type": "boolean",
             "default": false
           },
@@ -105,6 +111,12 @@
             "title": "Volume",
             "type": "boolean",
             "default": false
+          },
+          "DolbyPostProcessing": {
+            "title": "Dolby Post Processing",
+            "type": "boolean",
+            "default": false,
+            "description": ""
           }
         }
       }     
@@ -142,7 +154,8 @@
         "Zone1.Volume",
         "Zone1.MultipleInputs",
         "Zone1.ALM",
-        "Zone1.ARC"
+        "Zone1.ARC",
+        "Zone1.DolbyPostProcessing"
       ]
     },
     {
@@ -167,7 +180,8 @@
         "Zone2.Power",
         "Zone2.Mute",
         "Zone2.Volume",
-        "Zone2.MultipleInputs"      ]
+        "Zone2.MultipleInputs",
+        "Zone2.DolbyPostProcessing"      ]
     },
     {
       "title": "Zone 2 - Power/Input Accessory>",
