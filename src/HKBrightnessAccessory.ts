@@ -1,27 +1,26 @@
-import { PlatformAccessory, Service } from 'homebridge';
+import { Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
+import { HKAccessory } from './HKAccessory';
 
-export class HKBrightnessAccessory {
+export class HKBrightnessAccessory extends HKAccessory {
   private service: Service;
   private PanelBrightnessOn = true;
 
   constructor(
-    private readonly platform: AnthemReceiverHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
-    private readonly Controller: AnthemController,
+    protected readonly platform: AnthemReceiverHomebridgePlatform,
+    protected readonly Controller: AnthemController,
   ) {
+    super(platform, Controller, 'Front Panel');
     this.platform.log.info('Front Panel Brightness');
 
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb)
-    || this.accessory.addService(this.platform.Service.Lightbulb);
+    this.service = this.Accessory.getService(this.platform.Service.Lightbulb)
+    || this.Accessory.addService(this.platform.Service.Lightbulb);
 
     // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' Brightness Accessory')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Brightness')
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Brightness');
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.SetPanelOn.bind(this));
@@ -80,5 +79,7 @@ export class HKBrightnessAccessory {
     }
   }
 
-
+  protected CreateUUID(): string {
+    return this.Controller.SerialNumber + 'Brightness Accessory';
+  }
 }

@@ -1,27 +1,26 @@
-import { PlatformAccessory, Service } from 'homebridge';
+import { Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
+import { HKAccessory } from './HKAccessory';
 
-export class HKVolumeAccessory {
+export class HKVolumeAccessory extends HKAccessory {
   private service: Service;
 
   constructor(
-    private readonly platform: AnthemReceiverHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
-    private readonly Controller: AnthemController,
+    protected readonly platform: AnthemReceiverHomebridgePlatform,
+    protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
+    super(platform, Controller, 'Zone' + ZoneNumber + ' Volume');
     this.platform.log.info('Zone' + ZoneNumber + ': Volume');
 
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb)
-    || this.accessory.addService(this.platform.Service.Lightbulb);
+    this.service = this.Accessory.getService(this.platform.Service.Lightbulb)
+    || this.Accessory.addService(this.platform.Service.Lightbulb);
 
     // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' Volume Accessory')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Volume')
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.SetMute.bind(this));
@@ -77,5 +76,9 @@ export class HKVolumeAccessory {
         this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
       }, 100);
     }
+  }
+
+  protected CreateUUID(): string {
+    return this.Controller.SerialNumber + this.ZoneNumber + 'Volume';
   }
 }

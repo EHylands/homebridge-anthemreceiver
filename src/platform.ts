@@ -6,10 +6,10 @@ import { HKInputAccessoryNG } from './HKInputAccessoryNG';
 import { HKALMAccessoryNG } from './HKALMAccessoryNG';
 import { HKARCAccessory } from './HKARCAccessory';
 import { HKVolumeAccessory } from './HKVolumeAccessory';
+import { HKDolbyPostProcessingAccessory } from './HKDolbyPostProcessingAccessory';
 import { HKBrightnessAccessory } from './HKBrightnessAccessory';
 import { AnthemController, AnthemControllerError } from './AnthemController';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { HKDolbyPostProcessingAccessory } from './HKDolbyPostProcessingAccessory';
 
 export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -29,8 +29,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
   private Zone1Power = false;
   private Zone2Power = false;
   private Zone1ALM = false;
-  private Zone1Input = false;
-  private Zone2Input = false;
   private Zone1MultipleInputs = false;
   private Zone2MultipleInputs =false;
   private Zone1ARC = false;
@@ -159,7 +157,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     if(this.Zone1ARC){
-      this.ADDArcAccessory(1);
+      new HKARCAccessory(this, this.Controller, 1);
     }
 
     if(this.Zone1ALM){
@@ -207,31 +205,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       return;
     }
 
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'Volume');
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      new HKVolumeAccessory(this, existingAccessory, this.Controller, ZoneNumber);
-      this.CreatedAccessories.push(existingAccessory);
-    } else{
-      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' Volume', uuid);
-      new HKVolumeAccessory(this, accessory, this.Controller, ZoneNumber);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.CreatedAccessories.push(accessory);
-    }
-  }
-
-  private ADDArcAccessory(ZoneNumber: number){
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + ZoneNumber + 'ARC');
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      new HKARCAccessory(this, existingAccessory, this.Controller, ZoneNumber);
-      this.CreatedAccessories.push(existingAccessory);
-    } else{
-      const accessory = new this.api.platformAccessory('Zone' + ZoneNumber + ' ARC', uuid);
-      new HKARCAccessory(this, accessory, this.Controller, ZoneNumber);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.CreatedAccessories.push(accessory);
-    }
+    new HKVolumeAccessory(this, this.Controller, ZoneNumber);
   }
 
   AddBrightnessAccessory(){
@@ -241,17 +215,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
       return;
     }
 
-    const uuid = this.api.hap.uuid.generate(this.Controller.SerialNumber + 'Brightness Accessory');
-    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    if (existingAccessory) {
-      new HKBrightnessAccessory(this, existingAccessory, this.Controller);
-      this.CreatedAccessories.push(existingAccessory);
-    } else{
-      const accessory = new this.api.platformAccessory('Front Panel', uuid);
-      new HKBrightnessAccessory(this, accessory, this.Controller);
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.CreatedAccessories.push(accessory);
-    }
+    new HKBrightnessAccessory(this, this.Controller);
   }
 
   AddDolbyPostProcessingAccessory(Zone:number){
@@ -307,14 +271,6 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
 
     if(this.config.Zone2.Power !== undefined){
       this.Zone2Power = this.config.Zone2.Power;
-    }
-
-    if(this.config.Zone1.Input !== undefined){
-      this.Zone1Input = this.config.Zone1.Input;
-    }
-
-    if(this.config.Zone2.Input !== undefined){
-      this.Zone2Input = this.config.Zone2.Input;
     }
 
     if(this.config.Zone1.MultipleInputs !== undefined){

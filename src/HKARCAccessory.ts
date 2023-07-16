@@ -1,27 +1,27 @@
-import { PlatformAccessory, Service } from 'homebridge';
+import { Service } from 'homebridge';
 import { AnthemController} from './AnthemController';
 import { AnthemReceiverHomebridgePlatform } from './platform';
+import { HKAccessory } from './HKAccessory';
 
-export class HKARCAccessory {
+
+export class HKARCAccessory extends HKAccessory{
   private service: Service;
 
   constructor(
-    private readonly platform: AnthemReceiverHomebridgePlatform,
-    private readonly accessory: PlatformAccessory,
-    private readonly Controller: AnthemController,
+    protected readonly platform: AnthemReceiverHomebridgePlatform,
+    protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
+    super(platform, Controller, 'Zone' + ZoneNumber + ' ARC');
     this.platform.log.info('Zone' + ZoneNumber + ': ARC');
 
-    this.service = this.accessory.getService(this.platform.Service.Switch)
-    || this.accessory.addService(this.platform.Service.Switch);
+    this.service = this.Accessory.getService(this.platform.Service.Switch)
+    || this.Accessory.addService(this.platform.Service.Switch);
 
     // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Anthem')
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' ARC Accessory')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' ARC')
-      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' ARC');
 
     this.service.getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.SwitchARC.bind(this));
@@ -72,5 +72,9 @@ export class HKARCAccessory {
     }
 
     this.Controller.SetZoneARCEnabled(this.ZoneNumber, Value);
+  }
+
+  protected CreateUUID(): string {
+    return this.Controller.SerialNumber + this.ZoneNumber + 'ARC';
   }
 }
