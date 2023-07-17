@@ -393,6 +393,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Clear the Command Buffer and send to receiver
     //
     private SendCommand(){
+
       let CommandString = '';
       for(let i = 0 ; i < this.CommandArray.length ; i ++){
         CommandString = CommandString + this.CommandArray[i] + ';';
