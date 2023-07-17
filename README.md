@@ -51,4 +51,4 @@ Homebridge plugin for Anthem Receiver.
 - Zone needs to be powered off and on if inputs are added or removed on the receiver for changes to appear in HomeKit. If inputs are not visible under Power/Input Accessory, please kill and reopen Home App. 
 ## Platform Accessories
 - Zone inputs accessory needs to be remove and readded to homebridge if inputs are added or removed on the receiver for changes to appear in HomeKit.
-- All switch under Input and ALM accessorie will be set with default name "Zone Input" and "Zone1 ALM". This is a known iOS bug/feature. Please select every swith accessory details view and delete accessory name. The intended name will be available as a placeholder. 
+- All switch under Input and ALM accessories will be set with default name "Zone Input" and "Zone1 ALM". This is a known iOS bug/feature. Please select every swith accessory details view and delete accessory name. The intended name will be available as a placeholder. 
