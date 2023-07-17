@@ -11,9 +11,10 @@ export class HKVolumeAccessory extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    const Name = 'Zone' + ZoneNumber + ' Volume';
-    const UUID = Controller.SerialNumber + ZoneNumber + 'Volume';
-    super(platform, Controller, Name, UUID);
+    super(platform,
+      Controller,
+      'Zone' + ZoneNumber + ' Volume',
+      Controller.SerialNumber + ZoneNumber + 'Volume');
     this.platform.log.info('Zone' + ZoneNumber + ': Volume');
 
     this.service = this.Accessory.getService(this.platform.Service.Lightbulb)

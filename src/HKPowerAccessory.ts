@@ -12,10 +12,10 @@ export class HKPowerAccessory extends HKAccessory {
     protected readonly Controller: AnthemController,
     protected readonly ZoneNumber: number,
   ) {
-
-    const Name = 'Zone' + ZoneNumber + ' Power';
-    const UUID = Controller.SerialNumber + ZoneNumber + 'Power Accessory';
-    super(platform, Controller, Name, UUID);
+    super(platform,
+      Controller,
+      'Zone' + ZoneNumber + ' Power',
+      Controller.SerialNumber + ZoneNumber + 'Power Accessory');
 
     this.platform.log.info('Zone' + ZoneNumber + ': Power');
     this.service = this.Accessory.getService(this.platform.Service.Switch) || this.Accessory.addService(this.platform.Service.Switch);

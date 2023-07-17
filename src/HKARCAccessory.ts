@@ -12,9 +12,10 @@ export class HKARCAccessory extends HKAccessory{
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    const Name = 'Zone' + ZoneNumber + ' ARC';
-    const UUID = Controller.SerialNumber + ZoneNumber + 'ARC';
-    super(platform, Controller, Name, UUID);
+    super(platform,
+      Controller,
+      'Zone' + ZoneNumber + ' ARC',
+      Controller.SerialNumber + ZoneNumber + 'ARC');
     this.platform.log.info('Zone' + ZoneNumber + ': ARC');
 
     this.service = this.Accessory.getService(this.platform.Service.Switch)

@@ -10,9 +10,10 @@ export class HKInputAccessoryNG extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ){
-    const Name = 'Zone' + ZoneNumber + ' Inputs';
-    const UUID = Controller.SerialNumber + ZoneNumber + 'Input Selector NG';
-    super(platform, Controller, Name, UUID);
+    super(platform,
+      Controller,
+      'Zone' + ZoneNumber + ' Inputs',
+      Controller.SerialNumber + ZoneNumber + 'Input Selector NG');
     this.platform.log.info('Zone' + ZoneNumber + ': Input Selector');
 
     // Create service list

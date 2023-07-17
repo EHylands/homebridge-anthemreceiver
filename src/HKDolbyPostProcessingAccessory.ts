@@ -9,9 +9,10 @@ export class HKDolbyPostProcessingAccessory extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ){
-    const Name = 'Zone' + ZoneNumber + ' Dolby Mode';
-    const UUID = Controller.SerialNumber + ZoneNumber + 'Dolby Post Processing';
-    super(platform, Controller, Name, UUID);
+    super(platform,
+      Controller,
+      'Zone' + ZoneNumber + ' Dolby Mode',
+      Controller.SerialNumber + ZoneNumber + 'Dolby Post Processing');
     this.platform.log.info('Zone' + ZoneNumber + ': Audio Dolby Processing');
 
     // Create service list

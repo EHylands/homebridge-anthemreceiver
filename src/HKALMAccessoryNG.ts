@@ -9,10 +9,10 @@ export class HKALMAccessoryNG extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ){
-
-    const Name = 'Zone' + ZoneNumber + ' ALM';
-    const UUID = Controller.SerialNumber + ZoneNumber + 'ALM NG';
-    super(platform, Controller, Name, UUID);
+    super(platform,
+      Controller,
+      'Zone' + ZoneNumber + ' ALM', // Name
+      Controller.SerialNumber + ZoneNumber + 'ALM NG'); // UUID
     this.platform.log.info('Zone' + ZoneNumber + ': Audio Listenning Mode');
 
     // Create service list
