@@ -11,7 +11,9 @@ export class HKBrightnessAccessory extends HKAccessory {
     protected readonly platform: AnthemReceiverHomebridgePlatform,
     protected readonly Controller: AnthemController,
   ) {
-    super(platform, Controller, 'Front Panel');
+    const Name = 'Front Panel';
+    const UUID = Controller.SerialNumber + 'Brightness Accessory';
+    super(platform, Controller, Name, UUID);
     this.platform.log.info('Front Panel Brightness');
 
     this.service = this.Accessory.getService(this.platform.Service.Lightbulb)
@@ -77,9 +79,5 @@ export class HKBrightnessAccessory extends HKAccessory {
     } else{
       this.SetPanelBrightness(100);
     }
-  }
-
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + 'Brightness Accessory';
   }
 }

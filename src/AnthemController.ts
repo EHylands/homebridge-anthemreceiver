@@ -393,6 +393,7 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
     // Clear the Command Buffer and send to receiver
     //
     private SendCommand(){
+      console.log(this.CommandArray);
       let CommandString = '';
       for(let i = 0 ; i < this.CommandArray.length ; i ++){
         CommandString = CommandString + this.CommandArray[i] + ';';
@@ -749,7 +750,6 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
       }
 
       this.QueueCommand('Z1ALM?');
-      this.SendCommand();
     }
 
     // All zone need to have IsMuted, IsPowered and ActiveInput set before starting

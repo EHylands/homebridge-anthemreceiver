@@ -4,7 +4,7 @@
 
 Homebridge plugin for Anthem Receiver.
 - Zone 1 and Zone 2 Power/Input accessories (External accessories to be manually added in Home App)
-- Zone 1 and Zone 2 Power, Volume, Mute and Input accessories
+- Zone 1 and Zone 2 Power, Volume, Mute, Input and Dolby Audio Processing accessories
 - Zone 1 ARC and Audio Listenning Mode accessories
 - Front Panel Brightness Accessory
 

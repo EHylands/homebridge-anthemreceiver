@@ -10,9 +10,9 @@ export abstract class HKAccessory {
         protected readonly platform: AnthemReceiverHomebridgePlatform,
         protected readonly Controller: AnthemController,
         protected readonly Name:string,
+        protected readonly UUID:string,
     ) {
-
-      const uuid = this.platform.api.hap.uuid.generate(this.CreateUUID());
+      const uuid = this.platform.api.hap.uuid.generate(UUID);
       let accessory = this.platform.accessories.find(accessory => accessory.UUID === uuid);
       if(accessory){
         this.platform.api.updatePlatformAccessories([accessory]);
@@ -29,8 +29,6 @@ export abstract class HKAccessory {
         .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber)
         .setCharacteristic(this.platform.Characteristic.FirmwareRevision, Controller.SoftwareVersion);
     }
-
-    protected abstract CreateUUID(): string;
 
     protected AddService(Type: WithUUID<typeof Service>, Name:string, Subtype:string){
 

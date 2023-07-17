@@ -12,7 +12,9 @@ export class HKARCAccessory extends HKAccessory{
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    super(platform, Controller, 'Zone' + ZoneNumber + ' ARC');
+    const Name = 'Zone' + ZoneNumber + ' ARC';
+    const UUID = Controller.SerialNumber + ZoneNumber + 'ARC';
+    super(platform, Controller, Name, UUID);
     this.platform.log.info('Zone' + ZoneNumber + ': ARC');
 
     this.service = this.Accessory.getService(this.platform.Service.Switch)
@@ -72,9 +74,5 @@ export class HKARCAccessory extends HKAccessory{
     }
 
     this.Controller.SetZoneARCEnabled(this.ZoneNumber, Value);
-  }
-
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'ARC';
   }
 }

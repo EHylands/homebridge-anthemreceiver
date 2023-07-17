@@ -70,7 +70,7 @@
             "default": true
           },
           "DolbyPostProcessing": {
-            "title": "Dolby Post Processing",
+            "title": "Dolby Audio Processing",
             "type": "boolean",
             "default": true,
             "description": ""
@@ -113,7 +113,7 @@
             "default": false
           },
           "DolbyPostProcessing": {
-            "title": "Dolby Post Processing",
+            "title": "Dolby Audio Processing",
             "type": "boolean",
             "default": false,
             "description": ""

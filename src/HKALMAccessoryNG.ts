@@ -10,7 +10,9 @@ export class HKALMAccessoryNG extends HKAccessory {
     private readonly ZoneNumber: number,
   ){
 
-    super(platform, Controller, 'Zone' + ZoneNumber + ' ALM');
+    const Name = 'Zone' + ZoneNumber + ' ALM';
+    const UUID = Controller.SerialNumber + ZoneNumber + 'ALM NG';
+    super(platform, Controller, Name, UUID);
     this.platform.log.info('Zone' + ZoneNumber + ': Audio Listenning Mode');
 
     // Create service list
@@ -64,10 +66,6 @@ export class HKALMAccessoryNG extends HKAccessory {
         }
       }
     });
-  }
-
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'ALM NG';
   }
 }
 

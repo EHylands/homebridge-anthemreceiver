@@ -11,8 +11,9 @@ export class HKMuteAccessory extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    super(platform, Controller, 'Zone' + ZoneNumber + ' Mute');
-
+    const Name = 'Zone' + ZoneNumber + ' Mute';
+    const UUID = Controller.SerialNumber + ZoneNumber + 'Mute Accessory';
+    super(platform, Controller, Name, UUID);
     this.platform.log.info('Zone' + ZoneNumber + ': Mute');
 
     this.service = this.Accessory.getService(this.platform.Service.Switch)
@@ -57,9 +58,5 @@ export class HKMuteAccessory extends HKAccessory {
         this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
       }, 100);
     }
-  }
-
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'Mute Accessory';
   }
 }

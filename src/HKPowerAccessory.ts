@@ -10,10 +10,13 @@ export class HKPowerAccessory extends HKAccessory {
   constructor(
     protected readonly platform: AnthemReceiverHomebridgePlatform,
     protected readonly Controller: AnthemController,
-    private readonly ZoneNumber: number,
+    protected readonly ZoneNumber: number,
   ) {
 
-    super(platform, Controller, 'Zone' + ZoneNumber + ' Power');
+    const Name = 'Zone' + ZoneNumber + ' Power';
+    const UUID = Controller.SerialNumber + ZoneNumber + 'Power Accessory';
+    super(platform, Controller, Name, UUID);
+
     this.platform.log.info('Zone' + ZoneNumber + ': Power');
     this.service = this.Accessory.getService(this.platform.Service.Switch) || this.Accessory.addService(this.platform.Service.Switch);
 
@@ -44,7 +47,4 @@ export class HKPowerAccessory extends HKAccessory {
     this.Controller.PowerZone(this.ZoneNumber, value);
   }
 
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'Power Accessory';
-  }
 }

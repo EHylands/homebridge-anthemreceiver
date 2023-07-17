@@ -11,7 +11,9 @@ export class HKVolumeAccessory extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ) {
-    super(platform, Controller, 'Zone' + ZoneNumber + ' Volume');
+    const Name = 'Zone' + ZoneNumber + ' Volume';
+    const UUID = Controller.SerialNumber + ZoneNumber + 'Volume';
+    super(platform, Controller, Name, UUID);
     this.platform.log.info('Zone' + ZoneNumber + ': Volume');
 
     this.service = this.Accessory.getService(this.platform.Service.Lightbulb)
@@ -76,9 +78,5 @@ export class HKVolumeAccessory extends HKAccessory {
         this.service.getCharacteristic(this.platform.Characteristic.On).updateValue(false);
       }, 100);
     }
-  }
-
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'Volume';
   }
 }

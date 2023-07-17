@@ -10,8 +10,9 @@ export class HKInputAccessoryNG extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ){
-
-    super(platform, Controller, 'Zone' + ZoneNumber + ' Inputs');
+    const Name = 'Zone' + ZoneNumber + ' Inputs';
+    const UUID = Controller.SerialNumber + ZoneNumber + 'Input Selector NG'
+    super(platform, Controller, Name, UUID);
     this.platform.log.info('Zone' + ZoneNumber + ': Input Selector');
 
     // Create service list
@@ -64,9 +65,5 @@ export class HKInputAccessoryNG extends HKAccessory {
         }
       }
     });
-  }
-
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'Input Selector NG';
   }
 }

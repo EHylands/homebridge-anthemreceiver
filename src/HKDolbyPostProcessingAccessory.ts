@@ -9,9 +9,10 @@ export class HKDolbyPostProcessingAccessory extends HKAccessory {
     protected readonly Controller: AnthemController,
     private readonly ZoneNumber: number,
   ){
-
-    super(platform, Controller, 'Zone' + ZoneNumber + ' Dolby Mode');
-    this.platform.log.info('Zone' + ZoneNumber + ': Audio Dolby Post-Processing');
+    const Name = 'Zone' + ZoneNumber + ' Dolby Mode';
+    const UUID = Controller.SerialNumber + ZoneNumber + 'Dolby Post Processing';
+    super(platform, Controller, Name, UUID);
+    this.platform.log.info('Zone' + ZoneNumber + ': Audio Dolby Processing');
 
     // Create service list
     const DPP = [
@@ -69,10 +70,6 @@ export class HKDolbyPostProcessingAccessory extends HKAccessory {
         }
       }
     });
-  }
-
-  protected CreateUUID(): string {
-    return this.Controller.SerialNumber + this.ZoneNumber + 'Dolby Post Processing';
   }
 }
 

@@ -1,5 +1,5 @@
 {
-  "displayName": "Anthem Receiver",
+  "displayName": "Homebrige Anthem Receiver",
   "name": "homebridge-anthemreceiver",
   "version": "0.7.5",
   "description": "Homebridge integration for Anthem AV receiver.",

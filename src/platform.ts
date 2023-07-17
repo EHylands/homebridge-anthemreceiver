@@ -323,7 +323,7 @@ export class AnthemReceiverHomebridgePlatform implements DynamicPlatformPlugin {
     this.log.info('Zones: ' + this.Controller.GetConfiguredZoneNumber());
     for(const ZoneNumber in this.Controller.GetZones()){
       const Zone = this.Controller.GetZones()[ZoneNumber];
-      this.log.info(' Zone:' + ZoneNumber + ': ' + Zone.ZoneName);
+      this.log.info(' Zone' + ZoneNumber + ': ' + Zone.ZoneName);
     }
 
     const Inputs = this.Controller.GetInputs();
