@@ -152,6 +152,10 @@ export class HKPowerInputAccessory {
             break;
           }
 
+          case this.platform.Characteristic.RemoteKey.EXIT: {
+            break;
+          }
+
           case this.platform.Characteristic.RemoteKey.PLAY_PAUSE: {
             this.Controller.ToggleMute(this.ZoneNumber);
             break;
