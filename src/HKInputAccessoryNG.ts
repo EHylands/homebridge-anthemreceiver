@@ -16,6 +16,11 @@ export class HKInputAccessoryNG extends HKAccessory {
       Controller.SerialNumber + ZoneNumber + 'Input Selector NG');
     this.platform.log.info('Zone' + ZoneNumber + ': Input Selector');
 
+    // set accessory information
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' Input Accessory')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Inputs');
+
     // Create service list
     const Inputs = Controller.GetInputs();
     for(let i = 0 ; i < Inputs.length ; i++){

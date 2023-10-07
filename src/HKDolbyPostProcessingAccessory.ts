@@ -15,6 +15,11 @@ export class HKDolbyPostProcessingAccessory extends HKAccessory {
       Controller.SerialNumber + ZoneNumber + 'Dolby Post Processing');
     this.platform.log.info('Zone' + ZoneNumber + ': Audio Dolby Processing');
 
+    // set accessory information
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' Dolby Accessory')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' Dolby');
+
     // Create service list
     const DPP = [
       'Off',

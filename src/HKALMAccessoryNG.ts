@@ -15,6 +15,11 @@ export class HKALMAccessoryNG extends HKAccessory {
       Controller.SerialNumber + ZoneNumber + 'ALM NG'); // UUID
     this.platform.log.info('Zone' + ZoneNumber + ': Audio Listenning Mode');
 
+    // set accessory information
+    this.Accessory.getService(this.platform.Service.AccessoryInformation)!
+      .setCharacteristic(this.platform.Characteristic.Model, Controller.ReceiverModel + ' ALM Accessory')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, Controller.SerialNumber + ' ALM');
+
     // Create service list
     const ALM = this.Controller.GetALMArray();
 
