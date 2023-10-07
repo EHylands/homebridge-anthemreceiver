@@ -51,8 +51,6 @@ export enum AnthemDolbyAudioPostProcessing {
   NIGHT = 3,
 }
 
-
-
 const AllAnthemReceiverModel = [
   AnthemReceiverModel.MRX310,
   AnthemReceiverModel.MRX510,
@@ -149,7 +147,6 @@ export class AnthemZone{
   private ARCConfigured = true;
   private ActiveInput = 0;
   private ActiveInputARCEnabled = false;
-  private ActiveInputDolbyPostProcessing = 0;
   private IsPowered = false;
   private PowerConfigured = false;
   private VolumePercentage = 0;
@@ -257,6 +254,9 @@ export class AnthemController extends TypedEmitter<AnthemControllerEvent> {
 
     constructor() {
       super();
+
+      // Need to add more possible EventEmitter lsteners if all accessories are active
+      this.setMaxListeners(15);
     }
 
     Connect(Host: string, Port:number){
